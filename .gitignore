@@ -1,0 +1,95 @@
+# Python
+*.py[cod]
+__pycache__/
+*.so
+*.egg
+*.egg-info
+dist
+build
+
+# FastAPI specific
+.env
+*.env
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Pytest
+.cache
+*.cover
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+
+# Mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Docker
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Other editors
+*.swp
+.swo
+*~
+
+# Coverage reports
+coverage.xml
+*.cover
+.hypothesis/
+
+# Pipenv
+Pipfile.lock
+
+# Poetry
+poetry.lock
+
+# Flask
+instance/
+.webassets-cache
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Sphinx documentation
+docs/_build/
+
+# Pyre type checker
+.pyre/
+
