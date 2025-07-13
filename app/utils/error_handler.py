@@ -52,7 +52,7 @@ class ErrorHandler:
                 if is_dev:
                     metadata.stack_trace = traceback.format_exc()
             except:
-                pass  # Ignore if we can't get env variable
+                pass  
 
         return metadata
 

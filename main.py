@@ -5,10 +5,8 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
-from app.api.endpoints import nutrition
-from app.api.endpoints import chat
+from app.endpoints import chat, nutrition
 from app.services.chat_database import Database
 from app.utils.envManager import get_env_variable, get_env_variable_safe
 from app.middleware.exception_handlers import setup_exception_handlers
@@ -54,8 +52,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
 app.include_router(nutrition.router, prefix="/nutrition")
@@ -66,6 +62,4 @@ if __name__ == "__main__":
     host = get_env_variable_safe("HOST", "0.0.0.0")
     port = int(get_env_variable_safe("PORT", "8000"))
 
-    uvicorn.run(
-        app, host=host, port=port, reload=not isProd  # Enable reload in development
-    )
+    uvicorn.run(app, host=host, port=port, reload=not isProd)

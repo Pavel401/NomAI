@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Annotated
+from typing import Annotated, Optional
 
 import fastapi
 from fastapi import Depends, Request, Form
@@ -11,6 +11,7 @@ from pydantic_ai.messages import (
     ModelMessage,
     ModelRequest,
     ModelResponse,
+    SystemPromptPart,
     TextPart,
     UserPromptPart,
 )
@@ -36,21 +37,25 @@ def get_agent():
 
 
 # Get the static files directory
-STATIC_DIR = Path(__file__).parent.parent.parent.parent / "static"
+STATIC_DIR = Path(__file__).parent.parent / "static"
 
 
-def to_chat_message(m: ModelMessage) -> ChatMessage:
+def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
     """Convert a model message to a chat message format."""
-    first_part = m.parts[0]
     if isinstance(m, ModelRequest):
-        if isinstance(first_part, UserPromptPart):
-            assert isinstance(first_part.content, str)
-            return {
-                "role": "user",
-                "timestamp": first_part.timestamp.isoformat(),
-                "content": first_part.content,
-            }
+        # Look for UserPromptPart in the message parts (skip SystemPromptPart)
+        for part in m.parts:
+            if isinstance(part, UserPromptPart):
+                assert isinstance(part.content, str)
+                return {
+                    "role": "user",
+                    "timestamp": part.timestamp.isoformat(),
+                    "content": part.content,
+                }
+        # If no UserPromptPart found, skip this message (likely system prompt only)
+        return None
     elif isinstance(m, ModelResponse):
+        first_part = m.parts[0]
         if isinstance(first_part, TextPart):
             return {
                 "role": "model",
@@ -83,8 +88,11 @@ async def get_chat_messages() -> Response:
     """Get all chat messages."""
     async with Database.connect() as database:
         msgs = await database.get_messages()
+        chat_messages = [to_chat_message(m) for m in msgs]
+        # Filter out None values (system-only messages)
+        filtered_messages = [msg for msg in chat_messages if msg is not None]
         return Response(
-            b"\n".join(json.dumps(to_chat_message(m)).encode("utf-8") for m in msgs),
+            b"\n".join(json.dumps(msg).encode("utf-8") for msg in filtered_messages),
             media_type="text/plain",
         )
 

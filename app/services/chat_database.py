@@ -15,6 +15,8 @@ import sqlite3
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 import logfire
 
+from app.config.chat_config import chat_config
+
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -36,7 +38,6 @@ class Database:
     @asynccontextmanager
     async def connect(cls, file: Path | None = None) -> AsyncIterator[Database]:
         if file is None:
-            from ..constants.chat_config import chat_config
 
             file = Path(__file__).parent.parent.parent / chat_config.database_file
 
