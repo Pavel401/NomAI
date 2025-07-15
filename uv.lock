@@ -1032,7 +1032,7 @@ dependencies = [
     { name = "pyasn1-modules" },
     { name = "pycparser" },
     { name = "pydantic" },
-    { name = "pydantic-ai" },
+    { name = "pydantic-ai", extra = ["logfire"] },
     { name = "pydantic-ai-slim" },
     { name = "pydantic-evals" },
     { name = "pydantic-graph" },
@@ -1151,7 +1151,7 @@ requires-dist = [
     { name = "pyasn1-modules" },
     { name = "pycparser" },
     { name = "pydantic" },
-    { name = "pydantic-ai" },
+    { name = "pydantic-ai", extras = ["logfire"] },
     { name = "pydantic-ai-slim" },
     { name = "pydantic-evals" },
     { name = "pydantic-graph" },
@@ -1529,6 +1529,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/eb/5c/d106c4fe8ea9ce1eb00c5e3f9cc931070053bc3e3262f296cc12a9ae58cd/pydantic_ai-0.4.0.tar.gz", hash = "sha256:c42b126faa43e021716180651b231ace320232128e75f602d5a274aafbc0a41c", size = 41340398, upload-time = "2025-07-08T19:50:22.933Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/eb/78/bb6ff304553454fdafcd245fd01416027e79a10195cd081194cece8af3af/pydantic_ai-0.4.0-py3-none-any.whl", hash = "sha256:288f897cb36a2fb5decba69053302c654300b0fd191c07bf0f01d026e2b3c73f", size = 10124, upload-time = "2025-07-08T19:50:10.865Z" },
+]
+
+[package.optional-dependencies]
+logfire = [
+    { name = "logfire" },
 ]
 
 [[package]]

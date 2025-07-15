@@ -19,7 +19,7 @@ from pydantic_ai.exceptions import UnexpectedModelBehavior
 
 from app.models.ChatModels import ChatMessage
 from app.services.chat_database import Database
-from app.services.chat_service import create_chat_agent
+from app.services.agent_service import AgentService
 
 
 router = fastapi.APIRouter()
@@ -32,7 +32,7 @@ def get_agent():
     """Get or create the chat agent."""
     global _agent
     if _agent is None:
-        _agent = create_chat_agent()
+        _agent = AgentService.create_chat_agent()
     return _agent
 
 
@@ -103,18 +103,6 @@ async def post_chat_message(prompt: Annotated[str, Form()]) -> StreamingResponse
 
     async def stream_messages():
         """Streams new line delimited JSON `Message`s to the client."""
-        # stream the user prompt so that can be displayed straight away
-        yield (
-            json.dumps(
-                {
-                    "role": "user",
-                    "timestamp": datetime.now(tz=timezone.utc).isoformat(),
-                    "content": prompt,
-                }
-            ).encode("utf-8")
-            + b"\n"
-        )
-
         # Connect to database and get chat history
         async with Database.connect() as database:
             # get the chat history so far to pass as context to the agent

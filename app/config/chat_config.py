@@ -4,6 +4,7 @@ Configuration settings for the chat functionality.
 
 from typing import Optional
 
+from app.config.model_config import ModelCode
 from app.utils.envManager import get_env_variable_safe
 
 
@@ -12,18 +13,11 @@ class ChatConfig:
 
     def __init__(self):
         self.openai_api_key = self._get_openai_key()
-        self.model_name = get_env_variable_safe("CHAT_MODEL", "gpt-4o")
-        self.max_messages = int(get_env_variable_safe("CHAT_MAX_MESSAGES", "100"))
-        self.system_prompt = get_env_variable_safe(
-            "CHAT_SYSTEM_PROMPT",
-            "You are NomAI, a helpful AI nutrition assistant. You can help with nutrition questions, food analysis, dietary advice, and general health information. Be friendly, informative, and always remind users to consult healthcare professionals for medical advice.",
-        )
-        self.enable_debug = (
-            get_env_variable_safe("CHAT_DEBUG", "false").lower() == "true"
-        )
-        self.database_file = get_env_variable_safe(
-            "CHAT_DB_FILE", ".chat_app_messages.sqlite"
-        )
+        self.model_name = ModelCode.OPENAI_GPT_4o_MINI.value
+        self.max_messages = 100
+        self.system_prompt = "You are NomAI, a helpful AI nutrition assistant. You can help with nutrition questions, food analysis, dietary advice, and general health information. Be friendly, informative, and always remind users to consult healthcare professionals for medical advice."
+        self.enable_debug = True
+        self.database_file = ".chat_app_messages.sqlite"
 
     def _get_openai_key(self) -> Optional[str]:
         """Get OpenAI API key from environment variables."""

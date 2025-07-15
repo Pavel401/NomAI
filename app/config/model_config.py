@@ -7,3 +7,4 @@ class ModelCode(enum.Enum):
     GEMINI_15_FLASH = "gemini-1.5-flash"
     GEMINI_15_FLASH_8B = "gemini-1.5-flash-8b"
     GEMINI_15_PRO = "gemini-1.5-pro"
+    OPENAI_GPT_4o_MINI = "gpt-4o-mini-2024-07-18"

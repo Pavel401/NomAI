@@ -87,7 +87,7 @@ dependencies = [
     "pyasn1_modules",
     "pycparser",
     "pydantic",
-    "pydantic-ai",
+    "pydantic-ai[logfire]",
     "pydantic-ai-slim",
     "pydantic-evals",
     "pydantic-graph",
