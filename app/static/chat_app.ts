@@ -1,230 +1,409 @@
-// BIG FAT WARNING: to avoid the complexity of npm, this typescript is compiled in the browser
-// there's currently no static type checking
+interface ChatMessage {
+    role: 'user' | 'model';
+    timestamp: string;
+    content: string;
+    tool_calls?: Array<{
+        tool_name: string;
+        args: string;
+        tool_call_id: string;
+    }>;
+    tool_returns?: Array<{
+        tool_call_id: string;
+        content: any;
+        tool_name: string;
+    }>;
+    is_final?: boolean;
+}
 
-import { marked } from 'https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.0/lib/marked.esm.js'
-const convElement = document.getElementById('conversation')
+interface NutritionData {
+    response: {
+        foodName: string;
+        portion: string;
+        portionSize: number;
+        confidenceScore: number;
+        ingredients: Array<{
+            name: string;
+            calories: number;
+            protein: number;
+            carbs: number;
+            fiber: number;
+            fat: number;
+            healthScore: number;
+            healthComments: string;
+        }>;
+        primaryConcerns?: Array<{
+            issue: string;
+            explanation: string;
+            recommendations: Array<{
+                food: string;
+                quantity: string;
+                reasoning: string;
+            }>;
+        }>;
+        suggestAlternatives?: Array<{
+            name: string;
+            calories: number;
+            protein: number;
+            carbs: number;
+            fiber: number;
+            fat: number;
+            healthScore: number;
+            healthComments: string;
+        }>;
+        overallHealthScore: number;
+        overallHealthComments: string;
+    };
+}
 
-const promptInput = document.getElementById('prompt-input') as HTMLInputElement
-const spinner = document.getElementById('spinner')
+class ChatApp {
+    private messagesContainer: HTMLElement;
+    private messageInput: HTMLTextAreaElement;
+    private sendButton: HTMLButtonElement;
+    private isTyping: boolean = false;
 
-// stream the response and render messages as each chunk is received
-// data is sent as newline-delimited JSON
-async function onFetchResponse(response: Response): Promise<void> {
-    let text = ''
-    let decoder = new TextDecoder()
-    if (response.ok) {
-        const reader = response.body?.getReader()
-        if (reader) {
-            while (true) {
-                const { done, value } = await reader.read()
-                if (done) {
-                    break
-                }
-                text += decoder.decode(value)
-                addMessages(text)
-                spinner?.classList.remove('active')
+    constructor() {
+        this.messagesContainer = document.getElementById('messages') as HTMLElement;
+        this.messageInput = document.getElementById('messageInput') as HTMLTextAreaElement;
+        this.sendButton = document.getElementById('sendButton') as HTMLButtonElement;
+
+        this.setupEventListeners();
+        this.loadMessages();
+    }
+
+    private setupEventListeners(): void {
+        this.sendButton.addEventListener('click', () => this.sendMessage());
+        
+        this.messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage();
             }
-        }
-        addMessages(text)
-        if (promptInput) {
-            promptInput.disabled = false
-            promptInput.focus()
-        }
-    } else {
-        const text = await response.text()
-        console.error(`Unexpected response: ${response.status}`, { response, text })
-        throw new Error(`Unexpected response: ${response.status}`)
+        });
+
+        this.messageInput.addEventListener('input', () => {
+            this.autoResizeTextarea();
+        });
     }
-}
 
-// The format of messages, this matches pydantic-ai both for brevity and understanding
-// in production, you might not want to keep this format all the way to the frontend
-interface Message {
-    role: string
-    content: string
-    timestamp: string
-}
-
-function showDebug(message: string) {
-    const debug = document.getElementById('debug');
-    if (debug) {
-        debug.textContent += message + '\n';
-        debug.classList.remove('d-none');
+    private autoResizeTextarea(): void {
+        this.messageInput.style.height = 'auto';
+        this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, 120) + 'px';
     }
-}
 
-// take raw response text and render messages into the `#conversation` element
-// Message timestamp is assumed to be a unique identifier of a message, and is used to deduplicate
-// hence you can send data about the same message multiple times, and it will be updated
-// instead of creating a new message elements
-function addMessages(responseText: string) {
-    try {
-        showDebug("Raw responseText:\n" + responseText);
-        const lines = responseText.split('\n')
-        const messages: Message[] = lines.filter(line => line.length > 1).map(j => JSON.parse(j))
-        
-        // Hide empty state when messages are present
-        const emptyState = document.querySelector('.empty-state') as HTMLElement
-        if (messages.length > 0 && emptyState) {
-            emptyState.style.display = 'none'
-        }
-        
-        for (const message of messages) {
-            const { timestamp, role, content } = message
-            const id = `msg-${timestamp}`
-            let msgDiv = document.getElementById(id)
-            if (!msgDiv) {
-                msgDiv = document.createElement('div')
-                msgDiv.id = id
-                msgDiv.title = `${role} at ${timestamp}`
-                msgDiv.classList.add('message', role)
-                
-                // Create message wrapper with avatar
-                const messageWrapper = document.createElement('div')
-                messageWrapper.className = `d-flex ${role === 'user' ? 'justify-content-end' : 'justify-content-start'} align-items-start`
-                
-                if (role !== 'user') {
-                    const avatar = document.createElement('div')
-                    avatar.className = 'avatar ai-avatar'
-                    avatar.innerHTML = '<i class="fas fa-robot"></i>'
-                    messageWrapper.appendChild(avatar)
-                }
-                
-                const messageContent = document.createElement('div')
-                messageContent.className = 'message-content'
-                messageWrapper.appendChild(messageContent)
-                
-                if (role === 'user') {
-                    const avatar = document.createElement('div')
-                    avatar.className = 'avatar user-avatar ms-2'
-                    avatar.innerHTML = '<i class="fas fa-user"></i>'
-                    messageWrapper.appendChild(avatar)
-                }
-                
-                msgDiv.appendChild(messageWrapper)
-                if (convElement) {
-                    convElement.appendChild(msgDiv)
-                }
+    private async loadMessages(): Promise<void> {
+        try {
+            const response = await fetch('/chat/messages');
+            const text = await response.text();
+            
+            if (text.trim()) {
+                const messages = text.trim().split('\n').map(line => JSON.parse(line));
+                messages.forEach(message => this.displayMessage(message));
             }
             
-            const messageContent = msgDiv.querySelector('.message-content') as HTMLElement
-            if (messageContent) {
-                messageContent.innerHTML = marked.parse(content)
-            }
+            this.scrollToBottom();
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            this.showError('Failed to load chat history');
         }
-        // Scroll to bottom of conversation
-        if (convElement) {
-            convElement.scrollTo({ top: convElement.scrollHeight, behavior: 'smooth' })
-        }
-    } catch (err) {
-        console.error("Error parsing or rendering messages:", err, responseText)
-        const errorElement = document.getElementById('error')
-        if (errorElement) {
-            errorElement.textContent = "Error parsing messages. See console for details."
-            errorElement.classList.remove('d-none')
-        }
-        showDebug("Error parsing messages: " + err);
     }
-}
 
-function onError(error: any) {
-    console.error(error)
-    const errorElement = document.getElementById('error')
-    const spinnerElement = document.getElementById('spinner')
-    
-    if (errorElement) {
-        errorElement.classList.remove('d-none')
-    }
-    if (spinnerElement) {
-        spinnerElement.classList.remove('active')
-    }
-}
+    private async sendMessage(): Promise<void> {
+        const message = this.messageInput.value.trim();
+        if (!message || this.isTyping) return;
 
-async function onSubmit(e: SubmitEvent): Promise<void> {
-    e.preventDefault()
-    
-    const sendBtn = document.querySelector('.send-btn') as HTMLButtonElement
-    const form = e.target as HTMLFormElement
-    
-    // Show loading state
-    spinner?.classList.add('active')
-    if (sendBtn) {
-        sendBtn.disabled = true
-        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...'
-    }
-    
-    const body = new FormData(form)
-    const userMessage = body.get('prompt') as string
-
-    // Add user message immediately to the UI
-    if (userMessage.trim()) {
-        const userMsg = {
+        // Display user message immediately
+        const userMessage: ChatMessage = {
             role: 'user',
-            content: userMessage,
-            timestamp: Date.now().toString()
+            timestamp: new Date().toISOString(),
+            content: message
+        };
+        
+        this.displayMessage(userMessage);
+        this.messageInput.value = '';
+        this.autoResizeTextarea();
+        this.setTyping(true);
+
+        try {
+            const formData = new FormData();
+            formData.append('prompt', message);
+
+            const response = await fetch('/chat/messages', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const reader = response.body?.getReader();
+            if (!reader) {
+                throw new Error('No response body');
+            }
+
+            let currentMessage: ChatMessage | null = null;
+            let currentMessageElement: HTMLElement | null = null;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = new TextDecoder().decode(value);
+                const lines = chunk.split('\n').filter(line => line.trim());
+
+                for (const line of lines) {
+                    try {
+                        const messageData: ChatMessage = JSON.parse(line);
+                        
+                        if (messageData.is_final) {
+                            // Replace the current message with the final one
+                            if (currentMessageElement) {
+                                currentMessageElement.remove();
+                            }
+                            this.displayMessage(messageData);
+                        } else {
+                            // Update or create streaming message
+                            if (!currentMessage) {
+                                currentMessage = messageData;
+                                currentMessageElement = this.displayMessage(messageData);
+                            } else {
+                                // Update existing message content
+                                currentMessage.content = messageData.content;
+                                if (currentMessageElement) {
+                                    this.updateMessageContent(currentMessageElement, messageData);
+                                }
+                            }
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing message:', parseError);
+                    }
+                }
+            }
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            this.showError('Failed to send message. Please try again.');
+        } finally {
+            this.setTyping(false);
         }
-        addMessages(JSON.stringify(userMsg))
     }
 
-    if (promptInput) {
-        promptInput.value = ''
-        promptInput.disabled = true
+    private displayMessage(message: ChatMessage): HTMLElement {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${message.role}`;
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        this.updateMessageContent(messageDiv, message);
+
+        const timestamp = document.createElement('div');
+        timestamp.className = 'message-timestamp';
+        timestamp.textContent = this.formatTimestamp(message.timestamp);
+
+        messageDiv.appendChild(contentDiv);
+        messageDiv.appendChild(timestamp);
+        this.messagesContainer.appendChild(messageDiv);
+        
+        this.scrollToBottom();
+        return messageDiv;
     }
 
-    try {
-        showDebug("Submitting prompt: " + body.get('prompt'));
-        const response = await fetch('/chat/messages', { method: 'POST', body })
-        await onFetchResponse(response)
-    } catch (err) {
-        onError(err)
-    } finally {
-        // Reset button state
-        if (sendBtn) {
-            sendBtn.disabled = false
-            sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send'
-        }
-        if (promptInput) {
-            promptInput.disabled = false
-            promptInput.focus()
+    private updateMessageContent(messageElement: HTMLElement, message: ChatMessage): void {
+        const contentDiv = messageElement.querySelector('.message-content') as HTMLElement;
+        
+        if (message.role === 'model' && message.tool_returns && message.tool_returns.length > 0) {
+            // Handle nutrition data display
+            const nutritionData = this.extractNutritionData(message.tool_returns);
+            if (nutritionData) {
+                contentDiv.innerHTML = this.formatNutritionResponse(message.content, nutritionData);
+            } else {
+                contentDiv.innerHTML = this.formatTextContent(message.content);
+            }
+        } else {
+            contentDiv.innerHTML = this.formatTextContent(message.content);
         }
     }
-}
 
-// call onSubmit when the form is submitted (e.g. user clicks the send button or hits Enter)
-document.querySelector('form')?.addEventListener('submit', (e) => onSubmit(e).catch(onError))
-
-// load messages on page load
-fetch('/chat/messages').then(onFetchResponse).catch(onError)
-
-// Add keyboard shortcut for sending message (Ctrl+Enter or Cmd+Enter)
-if (promptInput) {
-    promptInput.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-            e.preventDefault()
-            const form = document.querySelector('form') as HTMLFormElement
-            if (form && promptInput.value.trim()) {
-                form.dispatchEvent(new Event('submit'))
+    private extractNutritionData(toolReturns: any[]): NutritionData | null {
+        for (const toolReturn of toolReturns) {
+            if (toolReturn.tool_name === 'calculate_nutrition_by_food_description' && toolReturn.content) {
+                return toolReturn.content as NutritionData;
             }
         }
-    })
+        return null;
+    }
 
-    // Auto-resize textarea behavior for input
-    promptInput.addEventListener('input', () => {
-        if (promptInput.value.length > 100) {
-            promptInput.style.height = 'auto'
-            promptInput.style.height = Math.min(promptInput.scrollHeight, 120) + 'px'
-        } else {
-            promptInput.style.height = 'auto'
+    private formatNutritionResponse(content: string, nutritionData: NutritionData): string {
+        let html = '';
+        
+        if (content) {
+            html += `<div>${this.formatTextContent(content)}</div>`;
         }
-    })
-}
 
-// Helper function for suggestion chips (defined globally for onclick)
-;(window as any).fillPrompt = function(text: string) {
-    if (promptInput) {
-        promptInput.value = text
-        promptInput.focus()
-        // Trigger input event to handle auto-resize
-        promptInput.dispatchEvent(new Event('input'))
+        const data = nutritionData.response;
+        
+        html += `<div class="nutrition-info">`;
+        
+        // Food name and basic info
+        html += `<div class="nutrition-section">`;
+        html += `<h4>📊 ${data.foodName}</h4>`;
+        html += `<p><strong>Portion:</strong> ${data.portionSize} ${data.portion}</p>`;
+        html += `<p><strong>Confidence Score:</strong> ${data.confidenceScore}/10</p>`;
+        html += `</div>`;
+
+        // Overall nutrition
+        if (data.ingredients && data.ingredients.length > 0) {
+            const totalNutrition = this.calculateTotalNutrition(data.ingredients);
+            
+            html += `<div class="nutrition-section">`;
+            html += `<h4>🥗 Total Nutrition</h4>`;
+            html += `<div class="nutrition-item">`;
+            html += `<strong>Calories:</strong> ${totalNutrition.calories} | `;
+            html += `<strong>Protein:</strong> ${totalNutrition.protein}g | `;
+            html += `<strong>Carbs:</strong> ${totalNutrition.carbs}g | `;
+            html += `<strong>Fiber:</strong> ${totalNutrition.fiber}g | `;
+            html += `<strong>Fat:</strong> ${totalNutrition.fat}g`;
+            html += `</div>`;
+            html += `</div>`;
+
+            // Individual ingredients
+            if (data.ingredients.length > 1) {
+                html += `<div class="nutrition-section">`;
+                html += `<h4>🔍 Breakdown by Ingredient</h4>`;
+                data.ingredients.forEach(ingredient => {
+                    const healthScoreClass = ingredient.healthScore >= 7 ? '' : ingredient.healthScore >= 5 ? 'medium' : 'low';
+                    html += `<div class="nutrition-item">`;
+                    html += `<strong>${ingredient.name}</strong> `;
+                    html += `<span class="health-score ${healthScoreClass}">Health Score: ${ingredient.healthScore}/10</span><br>`;
+                    html += `Calories: ${ingredient.calories} | Protein: ${ingredient.protein}g | Carbs: ${ingredient.carbs}g | Fat: ${ingredient.fat}g<br>`;
+                    html += `<small>${ingredient.healthComments}</small>`;
+                    html += `</div>`;
+                });
+                html += `</div>`;
+            }
+        }
+
+        // Health score
+        const overallScoreClass = data.overallHealthScore >= 7 ? '' : data.overallHealthScore >= 5 ? 'medium' : 'low';
+        html += `<div class="nutrition-section">`;
+        html += `<h4>💡 Overall Health Assessment</h4>`;
+        html += `<div class="nutrition-item">`;
+        html += `<span class="health-score ${overallScoreClass}">Overall Score: ${data.overallHealthScore}/10</span><br>`;
+        html += `<small>${data.overallHealthComments}</small>`;
+        html += `</div>`;
+        html += `</div>`;
+
+        // Primary concerns
+        if (data.primaryConcerns && data.primaryConcerns.length > 0) {
+            html += `<div class="nutrition-section">`;
+            html += `<h4>⚠️ Health Concerns</h4>`;
+            data.primaryConcerns.forEach(concern => {
+                html += `<div class="nutrition-item">`;
+                html += `<strong>${concern.issue}</strong><br>`;
+                html += `<small>${concern.explanation}</small>`;
+                if (concern.recommendations && concern.recommendations.length > 0) {
+                    html += `<br><strong>Recommendations:</strong><br>`;
+                    concern.recommendations.forEach(rec => {
+                        html += `<small>• ${rec.food} (${rec.quantity}): ${rec.reasoning}</small><br>`;
+                    });
+                }
+                html += `</div>`;
+            });
+            html += `</div>`;
+        }
+
+        // Alternatives
+        if (data.suggestAlternatives && data.suggestAlternatives.length > 0) {
+            html += `<div class="nutrition-section">`;
+            html += `<h4>🔄 Healthier Alternatives</h4>`;
+            data.suggestAlternatives.forEach(alt => {
+                const altScoreClass = alt.healthScore >= 7 ? '' : alt.healthScore >= 5 ? 'medium' : 'low';
+                html += `<div class="nutrition-item">`;
+                html += `<strong>${alt.name}</strong> `;
+                html += `<span class="health-score ${altScoreClass}">${alt.healthScore}/10</span><br>`;
+                html += `Calories: ${alt.calories} | Protein: ${alt.protein}g | Carbs: ${alt.carbs}g | Fat: ${alt.fat}g<br>`;
+                html += `<small>${alt.healthComments}</small>`;
+                html += `</div>`;
+            });
+            html += `</div>`;
+        }
+
+        html += `</div>`;
+        return html;
+    }
+
+    private calculateTotalNutrition(ingredients: any[]) {
+        return ingredients.reduce((total, ingredient) => ({
+            calories: total.calories + ingredient.calories,
+            protein: total.protein + ingredient.protein,
+            carbs: total.carbs + ingredient.carbs,
+            fiber: total.fiber + ingredient.fiber,
+            fat: total.fat + ingredient.fat
+        }), { calories: 0, protein: 0, carbs: 0, fiber: 0, fat: 0 });
+    }
+
+    private formatTextContent(content: string): string {
+        // Convert newlines to <br> tags and preserve formatting
+        return content
+            .replace(/\n/g, '<br>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    }
+
+    private formatTimestamp(timestamp: string): string {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+        });
+    }
+
+    private setTyping(typing: boolean): void {
+        this.isTyping = typing;
+        this.sendButton.disabled = typing;
+        
+        const existingIndicator = document.querySelector('.typing-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+
+        if (typing) {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = `
+                AI is thinking
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            this.messagesContainer.appendChild(typingDiv);
+            this.scrollToBottom();
+        }
+    }
+
+    private showError(message: string): void {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        this.messagesContainer.appendChild(errorDiv);
+        this.scrollToBottom();
+
+        // Remove error after 5 seconds
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
+
+    private scrollToBottom(): void {
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
     }
 }
+
+// Initialize the chat app when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new ChatApp();
+});
