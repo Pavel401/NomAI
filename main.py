@@ -6,7 +6,8 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.endpoints import chat, nutrition
+from app.agent import agent
+from app.endpoints import nutrition
 from app.utils.envManager import get_env_variable, get_env_variable_safe
 from app.middleware.exception_handlers import setup_exception_handlers
 import logfire
@@ -49,7 +50,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(nutrition.router, prefix="/nutrition")
-app.include_router(chat.router, prefix="/chat")
+app.include_router(agent.router, prefix="/chat")
 
 if __name__ == "__main__":
     host = get_env_variable_safe("HOST", "0.0.0.0")
