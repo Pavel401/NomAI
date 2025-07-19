@@ -3,8 +3,25 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>NomAI Chat Interface</title>
+        <title>NomAI - Advanced Nutrition Assistant</title>
         <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,50 +29,90 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 1rem;
         }
 
         .chat-container {
-            width: 90%;
-            max-width: 800px;
-            height: 90vh;
-            background: white;
+            width: 100%;
+            max-width: 900px;
+            height: 95vh;
+            background: var(--surface);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-lg);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            backdrop-filter: blur(10px);
         }
 
         .chat-header {
-            background: linear-gradient(90deg, #4CAF50, #45a049);
+            background: linear-gradient(135deg, var(--success-color), #059669);
             color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: 600;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+        }
+
+        .header-info h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-info p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            background: #f8f9fa;
+            padding: 1.5rem;
+            background: var(--background);
+            scroll-behavior: smooth;
         }
 
         .message {
-            margin-bottom: 16px;
-            animation: fadeIn 0.3s ease-in;
+            margin-bottom: 1.5rem;
+            animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message.user {
@@ -69,30 +126,34 @@
         }
 
         .message-content {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 18px;
+            max-width: 75%;
+            padding: 1rem 1.25rem;
+            border-radius: var(--border-radius);
             word-wrap: break-word;
-            line-height: 1.4;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            position: relative;
         }
 
         .message.user .message-content {
-            background: #007bff;
+            background: var(--primary-color);
             color: white;
             border-bottom-right-radius: 4px;
+            box-shadow: var(--shadow);
         }
 
         .message.model .message-content {
-            background: white;
-            color: #333;
-            border: 1px solid #e9ecef;
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
             border-bottom-left-radius: 4px;
+            box-shadow: var(--shadow);
         }
 
         .message-timestamp {
-            font-size: 12px;
-            color: #6c757d;
-            margin-top: 4px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
             text-align: right;
         }
 
@@ -103,140 +164,185 @@
         .message.system {
             display: flex;
             justify-content: center;
-            margin: 8px 0;
+            margin: 1rem 0;
         }
 
         .message.system .message-content {
-            background: #f8f9fa;
-            color: #6c757d;
-            border: 1px solid #dee2e6;
-            border-radius: 12px;
-            padding: 6px 12px;
-            font-size: 13px;
+            background: var(--background);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
             font-style: italic;
-            max-width: 50%;
+            max-width: 60%;
+            text-align: center;
         }
 
         .nutrition-info {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 8px;
-            font-size: 14px;
+            background: var(--surface);
+            border: 2px solid var(--success-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-top: 1rem;
+            box-shadow: var(--shadow);
         }
 
         .nutrition-section {
-            margin-bottom: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .nutrition-section:last-child {
+            margin-bottom: 0;
         }
 
         .nutrition-section h4 {
-            color: #495057;
-            margin-bottom: 6px;
-            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .nutrition-item {
-            background: white;
-            padding: 8px;
-            margin: 4px 0;
-            border-radius: 4px;
-            border-left: 3px solid #28a745;
+            background: var(--background);
+            padding: 1rem;
+            margin: 0.75rem 0;
+            border-radius: 8px;
+            border-left: 4px solid var(--success-color);
+            transition: var(--transition);
+        }
+
+        .nutrition-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
         }
 
         .health-score {
-            display: inline-block;
-            background: #28a745;
+            display: inline-flex;
+            align-items: center;
+            background: var(--success-color);
             color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
         }
 
         .health-score.low {
-            background: #dc3545;
+            background: var(--danger-color);
         }
 
         .health-score.medium {
-            background: #ffc107;
-            color: #212529;
+            background: var(--warning-color);
+            color: var(--text-primary);
         }
 
         .chat-input {
-            padding: 20px;
-            background: white;
-            border-top: 1px solid #e9ecef;
+            padding: 1.5rem;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
         }
 
         .input-container {
             display: flex;
-            gap: 12px;
+            gap: 1rem;
             align-items: flex-end;
+        }
+
+        .user-id-input {
+            flex: none;
+            width: 120px;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition);
+            background: var(--background);
+        }
+
+        .user-id-input:focus {
+            border-color: var(--primary-color);
+            background: var(--surface);
         }
 
         .input-field {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #e9ecef;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border);
             border-radius: 25px;
-            font-size: 16px;
+            font-size: 1rem;
             outline: none;
             resize: none;
-            min-height: 48px;
+            min-height: 50px;
             max-height: 120px;
             font-family: inherit;
+            transition: var(--transition);
+            background: var(--background);
         }
 
         .input-field:focus {
-            border-color: #007bff;
+            border-color: var(--primary-color);
+            background: var(--surface);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         .send-button {
-            background: #007bff;
+            background: var(--primary-color);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 48px;
-            height: 48px;
+            width: 50px;
+            height: 50px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background-color 0.2s;
-            font-size: 18px;
+            transition: var(--transition);
+            font-size: 1.2rem;
+            box-shadow: var(--shadow);
         }
 
         .send-button:hover:not(:disabled) {
-            background: #0056b3;
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
 
         .send-button:disabled {
-            background: #6c757d;
+            background: var(--text-secondary);
             cursor: not-allowed;
+            transform: none;
         }
 
         .typing-indicator {
             display: flex;
             align-items: center;
-            color: #6c757d;
+            color: var(--text-secondary);
             font-style: italic;
-            margin: 8px 0;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border);
         }
 
         .typing-dots {
             display: inline-flex;
-            margin-left: 8px;
+            margin-left: 0.75rem;
         }
 
         .typing-dots span {
-            width: 4px;
-            height: 4px;
-            background: #6c757d;
+            width: 6px;
+            height: 6px;
+            background: var(--primary-color);
             border-radius: 50%;
-            margin: 0 1px;
-            animation: typing 1.4s infinite;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
         }
 
         .typing-dots span:nth-child(2) {
@@ -249,63 +355,116 @@
 
         @keyframes typing {
             0%, 60%, 100% {
-                transform: translateY(0);
+                transform: scale(0.8);
+                opacity: 0.5;
             }
             30% {
-                transform: translateY(-10px);
+                transform: scale(1.2);
+                opacity: 1;
             }
         }
 
         .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 4px;
-            margin: 8px 0;
-            border: 1px solid #f5c6cb;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        /* Scrollbar styling */
         .chat-messages::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
 
         .chat-messages::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: var(--background);
+            border-radius: 4px;
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
+            background: var(--text-secondary);
+            border-radius: 4px;
+            transition: var(--transition);
         }
 
         .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
+            background: var(--text-primary);
         }
 
-        /* Mobile responsiveness */
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .nutrition-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .nutrition-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .nutrition-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nutrition-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
         @media (max-width: 768px) {
             .chat-container {
-                width: 95%;
-                height: 95vh;
-                border-radius: 12px;
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
             }
 
             .chat-header {
-                padding: 16px;
-                font-size: 20px;
+                padding: 1rem;
             }
 
-            .chat-messages {
-                padding: 16px;
+            .header-left {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .user-info {
+                order: -1;
+                align-self: flex-end;
             }
 
             .message-content {
-                max-width: 85%;
+                max-width: 90%;
             }
 
-            .chat-input {
-                padding: 16px;
+            .input-container {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .user-id-input {
+                width: 100%;
+            }
+
+            .nutrition-grid {
+                grid-template-columns: 1fr 1fr;
             }
         }
     </style>
@@ -313,131 +472,121 @@
     <body>
         <div class="chat-container">
             <div class="chat-header">
-                🥗 NomAI Nutrition Assistant
+                <div class="header-left">
+                    <div class="logo">🥗</div>
+                    <div class="header-info">
+                        <h1>NomAI</h1>
+                        <p>Your AI Nutrition Assistant</p>
+                    </div>
+                </div>
+                <div class="user-info" id="userDisplay">
+                    👤 <span id="currentUser">Guest</span>
+                </div>
             </div>
             <div class="chat-messages" id="messages"></div>
             <div class="chat-input">
                 <div class="input-container">
+                    <input
+                        id="userIdInput"
+                        class="user-id-input"
+                        type="text"
+                        placeholder="User ID"
+                        value="Pavel" />
                     <textarea
                         id="messageInput"
                         class="input-field"
-                        placeholder="Ask about nutrition, food calories, or describe what you ate..."
+                        placeholder="Describe your meal or ask about nutrition..."
                         rows="1"></textarea>
                     <button id="sendButton" class="send-button">
-                        ➤
+                        ↗
                     </button>
                 </div>
             </div>
         </div>
 
         <script>
-        // TypeScript code compiled to JavaScript
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Load and execute the TypeScript file
-            try {
-                const response = await fetch('/chat/chat_app.ts');
-                const tsCode = await response.text();
-                
-                // Simple TypeScript to JavaScript conversion for browser compatibility
-                const jsCode = tsCode
-                    .replace(/interface\s+\w+\s*{[^}]*}/g, '') // Remove interfaces
-                    .replace(/:\s*\w+(\[\])?/g, '') // Remove type annotations
-                    .replace(/private\s+/g, '')
-                    .replace(/public\s+/g, '')
-                    .replace(/async\s+(\w+)\([^)]*\):\s*Promise<[^>]*>/g, 'async $1()')
-                    .replace(/(\w+)\([^)]*\):\s*\w+(\[\])?/g, '$1()')
-                    .replace(/as\s+\w+/g, '');
-                
-                eval(jsCode);
-            } catch (error) {
-                console.error('Error loading TypeScript:', error);
-                // Fallback: include basic chat functionality
-                initBasicChat();
+        class EnhancedChatApp {
+            constructor() {
+                this.apiEndpoint = 'http://0.0.0.0:8080/chat/messages';
+                this.messagesContainer = document.getElementById('messages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.userIdInput = document.getElementById('userIdInput');
+                this.currentUserDisplay = document.getElementById('currentUser');
+                this.isTyping = false;
+
+                this.setupEventListeners();
+                this.updateUserDisplay();
+                this.loadMessages();
             }
-        });
 
-        function initBasicChat() {
-            const messagesContainer = document.getElementById('messages');
-            const messageInput = document.getElementById('messageInput');
-            const sendButton = document.getElementById('sendButton');
-            let isTyping = false;
+            setupEventListeners() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                
+                this.messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
 
-            async function loadMessages() {
+                this.messageInput.addEventListener('input', () => {
+                    this.autoResizeTextarea();
+                });
+
+                this.userIdInput.addEventListener('input', () => {
+                    this.updateUserDisplay();
+                });
+
+                this.userIdInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.messageInput.focus();
+                    }
+                });
+            }
+
+            updateUserDisplay() {
+                const userId = this.userIdInput.value.trim() || 'Guest';
+                this.currentUserDisplay.textContent = userId;
+            }
+
+            autoResizeTextarea() {
+                this.messageInput.style.height = 'auto';
+                this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, 120) + 'px';
+            }
+
+            async loadMessages() {
                 try {
-                    const response = await fetch('/chat/messages');
-                    const text = await response.text();
-                    
-                    if (text.trim()) {
-                        const messages = text.trim().split('\n').map(line => JSON.parse(line));
-                        messages.forEach(message => displayMessage(message));
+                    const userId = this.userIdInput.value.trim() || 'Guest';
+                    const url = `${this.apiEndpoint}?user_id=${encodeURIComponent(userId)}`;
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const text = await response.text();
+                        if (text.trim()) {
+                            const messages = text.trim().split('\n').map(line => JSON.parse(line));
+                            messages.forEach(message => this.displayMessage(message));
+                        }
                     }
                     
-                    scrollToBottom();
+                    this.scrollToBottom();
                 } catch (error) {
                     console.error('Error loading messages:', error);
+                    this.showError('Failed to load chat history. Please refresh the page.');
                 }
             }
 
-            function displayMessage(message) {
-                const messageDiv = document.createElement('div');
-                
-                // Handle system messages (tool call/result notifications)
-                if (message.is_system) {
-                    messageDiv.className = 'message system';
-                } else {
-                    messageDiv.className = `message ${message.role}`;
-                }
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message || this.isTyping) return;
 
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'message-content';
-                
-                if (message.role === 'model' && message.tool_returns && message.tool_returns.length > 0) {
-                    contentDiv.innerHTML = formatNutritionResponse(message.content, message.tool_returns);
-                } else {
-                    contentDiv.innerHTML = message.content.replace(/\n/g, '<br>');
-                }
-
-                messageDiv.appendChild(contentDiv);
-
-                // Only add timestamp for non-system messages
-                if (!message.is_system) {
-                    const timestamp = document.createElement('div');
-                    timestamp.className = 'message-timestamp';
-                    timestamp.textContent = new Date(message.timestamp).toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: false 
-                    });
-                    messageDiv.appendChild(timestamp);
-                }
-                messagesContainer.appendChild(messageDiv);
-                
-                scrollToBottom();
-                return messageDiv;
-            }
-
-            function formatNutritionResponse(content, toolReturns) {
-                let html = content ? `<div>${content.replace(/\n/g, '<br>')}</div>` : '';
-                
-                for (const toolReturn of toolReturns) {
-                    if (toolReturn.tool_name === 'calculate_nutrition_by_food_description' && toolReturn.content) {
-                        const data = toolReturn.content.response;
-                        
-                        html += `<div class="nutrition-info">`;
-                        html += `<div class="nutrition-section">`;
-                        html += `<h4>📊 ${data.foodName}</h4>`;
-                        html += `<p><strong>Calories:</strong> ${data.ingredients.reduce((sum, ing) => sum + ing.calories, 0)}</p>`;
-                        html += `<p><strong>Health Score:</strong> ${data.overallHealthScore}/10</p>`;
-                        html += `</div></div>`;
-                    }
-                }
-                
-                return html;
-            }
-
-            async function sendMessage() {
-                const message = messageInput.value.trim();
-                if (!message || isTyping) return;
+                const userId = this.userIdInput.value.trim() || 'Guest';
 
                 const userMessage = {
                     role: 'user',
@@ -445,21 +594,34 @@
                     content: message
                 };
                 
-                displayMessage(userMessage);
-                messageInput.value = '';
-                isTyping = true;
-                sendButton.disabled = true;
+                this.displayMessage(userMessage);
+                this.messageInput.value = '';
+                this.autoResizeTextarea();
+                this.setTyping(true);
 
                 try {
                     const formData = new FormData();
                     formData.append('prompt', message);
+                    formData.append('user_id', userId);
 
-                    const response = await fetch('/chat/messages', {
+                    const response = await fetch(this.apiEndpoint, {
                         method: 'POST',
-                        body: formData
+                        body: formData,
+                        headers: {
+                            'Accept': 'text/plain'
+                        }
                     });
 
-                    const reader = response.body.getReader();
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const reader = response.body?.getReader();
+                    if (!reader) {
+                        throw new Error('No response body');
+                    }
+
+                    let currentMessage = null;
                     let currentMessageElement = null;
 
                     while (true) {
@@ -474,50 +636,51 @@
                                 const messageData = JSON.parse(line);
                                 
                                 if (messageData.role === 'user') {
-                                    // Skip user messages as they're already displayed
                                     continue;
                                 }
                                 
                                 if (messageData.is_final) {
-                                    // Final message with complete content and tool info
                                     if (currentMessageElement) {
                                         currentMessageElement.remove();
                                     }
-                                    displayMessage(messageData);
+                                    this.displayMessage(messageData);
+                                    currentMessage = null;
                                     currentMessageElement = null;
                                 } else if (messageData.is_tool_call) {
-                                    // Tool call message - show that a tool is being called
                                     const toolCallMsg = {
                                         role: 'model',
                                         timestamp: messageData.timestamp,
-                                        content: `🔧 Calling tool: ${messageData.tool_calls[0].tool_name}...`,
+                                        content: `🔧 Analyzing nutrition data...`,
                                         is_system: true
                                     };
-                                    displayMessage(toolCallMsg);
+                                    this.displayMessage(toolCallMsg);
                                 } else if (messageData.is_tool_result) {
-                                    // Tool result message - could show result or just indicate completion
                                     const toolResultMsg = {
                                         role: 'model',
                                         timestamp: messageData.timestamp,
-                                        content: `✅ Tool completed: ${messageData.tool_returns[0].tool_name}`,
+                                        content: `✅ Nutrition analysis complete`,
                                         is_system: true
                                     };
-                                    displayMessage(toolResultMsg);
+                                    this.displayMessage(toolResultMsg);
                                 } else if (messageData.is_partial) {
-                                    // Partial streaming text
-                                    if (!currentMessageElement) {
-                                        currentMessageElement = displayMessage(messageData);
+                                    if (!currentMessage) {
+                                        currentMessage = messageData;
+                                        currentMessageElement = this.displayMessage(messageData);
                                     } else {
-                                        const contentDiv = currentMessageElement.querySelector('.message-content');
-                                        contentDiv.innerHTML = messageData.content.replace(/\n/g, '<br>');
+                                        currentMessage.content = messageData.content;
+                                        if (currentMessageElement) {
+                                            this.updateMessageContent(currentMessageElement, messageData);
+                                        }
                                     }
                                 } else {
-                                    // Regular message or unknown type
-                                    if (!currentMessageElement) {
-                                        currentMessageElement = displayMessage(messageData);
+                                    if (!currentMessage) {
+                                        currentMessage = messageData;
+                                        currentMessageElement = this.displayMessage(messageData);
                                     } else {
-                                        const contentDiv = currentMessageElement.querySelector('.message-content');
-                                        contentDiv.innerHTML = messageData.content.replace(/\n/g, '<br>');
+                                        currentMessage.content = messageData.content;
+                                        if (currentMessageElement) {
+                                            this.updateMessageContent(currentMessageElement, messageData);
+                                        }
                                     }
                                 }
                             } catch (parseError) {
@@ -528,26 +691,247 @@
 
                 } catch (error) {
                     console.error('Error sending message:', error);
+                    this.showError('Failed to send message. Please check your connection and try again.');
                 } finally {
-                    isTyping = false;
-                    sendButton.disabled = false;
+                    this.setTyping(false);
                 }
             }
 
-            function scrollToBottom() {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            displayMessage(message) {
+                const messageDiv = document.createElement('div');
+                
+                if (message.is_system) {
+                    messageDiv.className = 'message system';
+                } else {
+                    messageDiv.className = `message ${message.role}`;
+                }
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                messageDiv.appendChild(contentDiv);
+                
+                this.updateMessageContent(messageDiv, message);
+
+                if (!message.is_system) {
+                    const timestamp = document.createElement('div');
+                    timestamp.className = 'message-timestamp';
+                    timestamp.textContent = this.formatTimestamp(message.timestamp);
+                    messageDiv.appendChild(timestamp);
+                }
+
+                this.messagesContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+                return messageDiv;
             }
 
-            sendButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
+            updateMessageContent(messageElement, message) {
+                const contentDiv = messageElement.querySelector('.message-content');
+                
+                if (message.role === 'model' && message.tool_returns && message.tool_returns.length > 0) {
+                    const nutritionData = this.extractNutritionData(message.tool_returns);
+                    if (nutritionData) {
+                        contentDiv.innerHTML = this.formatNutritionResponse(message.content, nutritionData);
+                    } else {
+                        contentDiv.innerHTML = this.formatTextContent(message.content);
+                    }
+                } else {
+                    contentDiv.innerHTML = this.formatTextContent(message.content);
                 }
-            });
+            }
 
-            loadMessages();
+            extractNutritionData(toolReturns) {
+                for (const toolReturn of toolReturns) {
+                    if (toolReturn.tool_name === 'calculate_nutrition_by_food_description' && toolReturn.content) {
+                        return toolReturn.content;
+                    }
+                }
+                return null;
+            }
+
+            formatNutritionResponse(content, nutritionData) {
+                let html = '';
+                
+                if (content) {
+                    html += `<div>${this.formatTextContent(content)}</div>`;
+                }
+
+                const data = nutritionData.response;
+                
+                html += `<div class="nutrition-info">`;
+                
+                // Header section
+                html += `<div class="nutrition-section">`;
+                html += `<h4>📊 ${data.foodName}</h4>`;
+                html += `<p><strong>Portion:</strong> ${data.portionSize} ${data.portion}</p>`;
+                html += `<p><strong>Analysis Confidence:</strong> ${data.confidenceScore}/10</p>`;
+                html += `</div>`;
+
+                // Nutrition overview with cards
+                if (data.ingredients && data.ingredients.length > 0) {
+                    const totalNutrition = this.calculateTotalNutrition(data.ingredients);
+                    
+                    html += `<div class="nutrition-section">`;
+                    html += `<h4>🥗 Nutritional Breakdown</h4>`;
+                    html += `<div class="nutrition-grid">`;
+                    html += `<div class="nutrition-card">
+                        <div class="nutrition-value">${totalNutrition.calories}</div>
+                        <div class="nutrition-label">Calories</div>
+                    </div>`;
+                    html += `<div class="nutrition-card">
+                        <div class="nutrition-value">${totalNutrition.protein}g</div>
+                        <div class="nutrition-label">Protein</div>
+                    </div>`;
+                    html += `<div class="nutrition-card">
+                        <div class="nutrition-value">${totalNutrition.carbs}g</div>
+                        <div class="nutrition-label">Carbohydrates</div>
+                    </div>`;
+                    html += `<div class="nutrition-card">
+                        <div class="nutrition-value">${totalNutrition.fat}g</div>
+                        <div class="nutrition-label">Fat</div>
+                    </div>`;
+                    html += `</div>`;
+                    html += `</div>`;
+
+                    // Individual ingredients
+                    if (data.ingredients.length > 1) {
+                        html += `<div class="nutrition-section">`;
+                        html += `<h4>🔍 Ingredient Analysis</h4>`;
+                        data.ingredients.forEach(ingredient => {
+                            const healthScoreClass = ingredient.healthScore >= 7 ? '' : ingredient.healthScore >= 5 ? 'medium' : 'low';
+                            html += `<div class="nutrition-item">`;
+                            html += `<strong>${ingredient.name}</strong>`;
+                            html += `<span class="health-score ${healthScoreClass}">Score: ${ingredient.healthScore}/10</span><br>`;
+                            html += `<em>Calories: ${ingredient.calories} | Protein: ${ingredient.protein}g | Carbs: ${ingredient.carbs}g | Fat: ${ingredient.fat}g</em><br>`;
+                            html += `<small style="margin-top: 0.5rem; display: block;">${ingredient.healthComments}</small>`;
+                            html += `</div>`;
+                        });
+                        html += `</div>`;
+                    }
+                }
+
+                // Overall health assessment
+                const overallScoreClass = data.overallHealthScore >= 7 ? '' : data.overallHealthScore >= 5 ? 'medium' : 'low';
+                html += `<div class="nutrition-section">`;
+                html += `<h4>💡 Health Assessment</h4>`;
+                html += `<div class="nutrition-item" style="border-left-color: ${data.overallHealthScore >= 7 ? 'var(--success-color)' : data.overallHealthScore >= 5 ? 'var(--warning-color)' : 'var(--danger-color)'};">`;
+                html += `<span class="health-score ${overallScoreClass}">Overall Score: ${data.overallHealthScore}/10</span><br>`;
+                html += `<p style="margin-top: 0.75rem;">${data.overallHealthComments}</p>`;
+                html += `</div>`;
+                html += `</div>`;
+
+                // Health concerns
+                if (data.primaryConcerns && data.primaryConcerns.length > 0) {
+                    html += `<div class="nutrition-section">`;
+                    html += `<h4>⚠️ Health Concerns</h4>`;
+                    data.primaryConcerns.forEach(concern => {
+                        html += `<div class="nutrition-item" style="border-left-color: var(--warning-color);">`;
+                        html += `<strong>${concern.issue}</strong><br>`;
+                        html += `<p style="margin: 0.5rem 0;">${concern.explanation}</p>`;
+                        if (concern.recommendations && concern.recommendations.length > 0) {
+                            html += `<div style="margin-top: 0.75rem;"><strong>💡 Recommendations:</strong></div>`;
+                            concern.recommendations.forEach(rec => {
+                                html += `<div style="margin: 0.25rem 0; padding-left: 1rem;">• <strong>${rec.food}</strong> (${rec.quantity}): ${rec.reasoning}</div>`;
+                            });
+                        }
+                        html += `</div>`;
+                    });
+                    html += `</div>`;
+                }
+
+                // Healthier alternatives
+                if (data.suggestAlternatives && data.suggestAlternatives.length > 0) {
+                    html += `<div class="nutrition-section">`;
+                    html += `<h4>🔄 Healthier Alternatives</h4>`;
+                    data.suggestAlternatives.forEach(alt => {
+                        const altScoreClass = alt.healthScore >= 7 ? '' : alt.healthScore >= 5 ? 'medium' : 'low';
+                        html += `<div class="nutrition-item" style="border-left-color: var(--primary-color);">`;
+                        html += `<strong>${alt.name}</strong>`;
+                        html += `<span class="health-score ${altScoreClass}">${alt.healthScore}/10</span><br>`;
+                        html += `<em>Calories: ${alt.calories} | Protein: ${alt.protein}g | Carbs: ${alt.carbs}g | Fat: ${alt.fat}g</em><br>`;
+                        html += `<p style="margin-top: 0.5rem;">${alt.healthComments}</p>`;
+                        html += `</div>`;
+                    });
+                    html += `</div>`;
+                }
+
+                html += `</div>`;
+                return html;
+            }
+
+            calculateTotalNutrition(ingredients) {
+                return ingredients.reduce((total, ingredient) => ({
+                    calories: total.calories + ingredient.calories,
+                    protein: total.protein + ingredient.protein,
+                    carbs: total.carbs + ingredient.carbs,
+                    fiber: total.fiber + ingredient.fiber,
+                    fat: total.fat + ingredient.fat
+                }), { calories: 0, protein: 0, carbs: 0, fiber: 0, fat: 0 });
+            }
+
+            formatTextContent(content) {
+                return content
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            }
+
+            formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+            }
+
+            setTyping(typing) {
+                this.isTyping = typing;
+                this.sendButton.disabled = typing;
+                
+                const existingIndicator = document.querySelector('.typing-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+
+                if (typing) {
+                    const typingDiv = document.createElement('div');
+                    typingDiv.className = 'typing-indicator';
+                    typingDiv.innerHTML = `
+                        🤖 NomAI is analyzing your nutrition data
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    `;
+                    this.messagesContainer.appendChild(typingDiv);
+                    this.scrollToBottom();
+                }
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = `⚠️ ${message}`;
+                this.messagesContainer.appendChild(errorDiv);
+                this.scrollToBottom();
+
+                setTimeout(() => {
+                    if (errorDiv.parentNode) {
+                        errorDiv.remove();
+                    }
+                }, 8000);
+            }
+
+            scrollToBottom() {
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }
         }
+
+        // Initialize the enhanced chat app
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedChatApp();
+        });
     </script>
     </body>
 </html>

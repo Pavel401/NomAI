@@ -1,100 +1,70 @@
 from __future__ import annotations as _annotations
 
 import asyncio
-import json
-from collections.abc import AsyncIterator
-from concurrent.futures.thread import ThreadPoolExecutor
-from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from functools import partial
+import json
+from typing import Any, List, Dict
 from pathlib import Path
-from typing import Any, Callable, TypeVar
-from typing_extensions import LiteralString, ParamSpec
 
-import sqlite3
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 import logfire
 
+
+from datetime import datetime
 from app.config.chat_config import chat_config
-
-
-P = ParamSpec("P")
-R = TypeVar("R")
+from app.services.supabase_chat_database import SupabaseDBClass
 
 
 @dataclass
 class Database:
-    """Rudimentary database to store chat messages in SQLite.
+    """Database to store chat messages in Supabase."""
 
-    The SQLite standard library package is synchronous, so we
-    use a thread pool executor to run queries asynchronously.
-    """
-
-    con: sqlite3.Connection
-    _loop: asyncio.AbstractEventLoop
-    _executor: ThreadPoolExecutor
+    supabase_db: SupabaseDBClass
 
     @classmethod
-    @asynccontextmanager
-    async def connect(cls, file: Path | None = None) -> AsyncIterator[Database]:
-        if file is None:
+    async def connect(cls, file: Path | None = None) -> Database:
+        """Create a connection to Supabase"""
+        with logfire.span("connect to Supabase"):
+            supabase_db = SupabaseDBClass()
+            return cls(supabase_db)
 
-            file = Path(__file__).parent.parent.parent / chat_config.database_file
+    async def add_messages(
+        self, user_id: str, messages: bytes, localtime: datetime = None
+    ):
+        """Add messages to Supabase for a specific user"""
 
-        with logfire.span("connect to DB"):
-            loop = asyncio.get_event_loop()
-            executor = ThreadPoolExecutor(max_workers=1)
-            con = await loop.run_in_executor(executor, cls._connect, file)
-            slf = cls(con, loop, executor)
         try:
-            yield slf
-        finally:
-            await slf._asyncify(con.close)
+            # Parse the messages from bytes
+            message_list = ModelMessagesTypeAdapter.validate_json(messages)
 
-    @staticmethod
-    def _connect(file: Path) -> sqlite3.Connection:
-        con = sqlite3.connect(str(file))
-        con = logfire.instrument_sqlite3(con)
-        cur = con.cursor()
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS messages (id INT PRIMARY KEY, message_list TEXT);"
-        )
-        con.commit()
-        return con
+            # Convert to JSON-serializable format using JSON round-trip
+            # This ensures all Pydantic objects are properly serialized
+            json_str = ModelMessagesTypeAdapter.dump_json(message_list)
+            messages_dict = json.loads(json_str)
 
-    async def add_messages(self, messages: bytes):
-        await self._asyncify(
-            self._execute,
-            "INSERT INTO messages (message_list) VALUES (?);",
-            messages,
-            commit=True,
-        )
-        await self._asyncify(self.con.commit)
+            await self.supabase_db.add_messages(user_id, messages_dict, localtime)
 
-    async def get_messages(self) -> list[ModelMessage]:
-        c = await self._asyncify(
-            self._execute, "SELECT message_list FROM messages order by id"
-        )
-        rows = await self._asyncify(c.fetchall)
-        messages: list[ModelMessage] = []
-        for row in rows:
-            messages.extend(ModelMessagesTypeAdapter.validate_json(row[0]))
+        except Exception as e:
+            print(f"Error in add_messages: {e}")
+            # Don't let database errors crash the streaming response
+
+    async def get_messages(self, user_id: str) -> List[ModelMessage]:
+        """Get all messages for a user from Supabase"""
+        messages_data = await self.supabase_db.get_messages(user_id)
+
+        print(f"Retrieved {len(messages_data)} messages for user {user_id}")
+
+        messages: List[ModelMessage] = []
+        for msg_data in messages_data:
+            # Convert back to ModelMessage
+            try:
+                parsed_messages = ModelMessagesTypeAdapter.validate_python([msg_data])
+                if isinstance(parsed_messages, list):
+                    messages.extend(parsed_messages)
+                else:
+                    messages.append(parsed_messages)
+            except Exception as e:
+                print(f"Error parsing message: {e}")
+                continue
+
         return messages
-
-    def _execute(
-        self, sql: LiteralString, *args: Any, commit: bool = False
-    ) -> sqlite3.Cursor:
-        cur = self.con.cursor()
-        cur.execute(sql, args)
-        if commit:
-            self.con.commit()
-        return cur
-
-    async def _asyncify(
-        self, func: Callable[P, R], *args: P.args, **kwargs: P.kwargs
-    ) -> R:
-        return await self._loop.run_in_executor(  # type: ignore
-            self._executor,
-            partial(func, **kwargs),
-            *args,  # type: ignore
-        )

@@ -7,11 +7,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.endpoints import chat, nutrition
-from app.services.chat_database import Database
 from app.utils.envManager import get_env_variable, get_env_variable_safe
 from app.middleware.exception_handlers import setup_exception_handlers
 import logfire
-
 
 # Configure logfire for chat functionality
 logfire.configure(send_to_logfire="if-token-present")
@@ -20,12 +18,9 @@ logfire.configure(send_to_logfire="if-token-present")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for FastAPI app."""
-    # Initialize chat database connection
-    async with Database.connect() as db:
-        # Store database instance in app state
-        app.state.chat_db = db
-        yield
-        # Cleanup happens automatically when context exits
+    # No need to initialize database connection here since we're using Supabase
+    # Each request will create its own connection
+    yield
 
 
 # Safely get environment variables
@@ -52,11 +47,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # Include routers
 app.include_router(nutrition.router, prefix="/nutrition")
 app.include_router(chat.router, prefix="/chat")
-
 
 if __name__ == "__main__":
     host = get_env_variable_safe("HOST", "0.0.0.0")

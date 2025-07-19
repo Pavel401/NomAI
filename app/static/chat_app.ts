@@ -59,12 +59,14 @@ class ChatApp {
     private messagesContainer: HTMLElement;
     private messageInput: HTMLTextAreaElement;
     private sendButton: HTMLButtonElement;
+    private userIdInput: HTMLInputElement;
     private isTyping: boolean = false;
 
     constructor() {
         this.messagesContainer = document.getElementById('messages') as HTMLElement;
         this.messageInput = document.getElementById('messageInput') as HTMLTextAreaElement;
         this.sendButton = document.getElementById('sendButton') as HTMLButtonElement;
+        this.userIdInput = document.getElementById('userIdInput') as HTMLInputElement;
 
         this.setupEventListeners();
         this.loadMessages();
@@ -111,13 +113,19 @@ class ChatApp {
         const message = this.messageInput.value.trim();
         if (!message || this.isTyping) return;
 
+        // Get user_id from input (optional)
+        const userId = this.userIdInput.value.trim() || 'Pavel';
+
+        // Get local time as ISO string
+        const localTime = new Date().toISOString();
+
         // Display user message immediately
         const userMessage: ChatMessage = {
             role: 'user',
-            timestamp: new Date().toISOString(),
+            timestamp: localTime,
             content: message
         };
-        
+
         this.displayMessage(userMessage);
         this.messageInput.value = '';
         this.autoResizeTextarea();
@@ -126,6 +134,8 @@ class ChatApp {
         try {
             const formData = new FormData();
             formData.append('prompt', message);
+            formData.append('user_id', userId);
+            formData.append('local_time', localTime);
 
             const response = await fetch('/chat/messages', {
                 method: 'POST',
@@ -195,13 +205,16 @@ class ChatApp {
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         
+        // Add contentDiv to messageDiv first
+        messageDiv.appendChild(contentDiv);
+        
+        // Then update the content
         this.updateMessageContent(messageDiv, message);
 
         const timestamp = document.createElement('div');
         timestamp.className = 'message-timestamp';
         timestamp.textContent = this.formatTimestamp(message.timestamp);
 
-        messageDiv.appendChild(contentDiv);
         messageDiv.appendChild(timestamp);
         this.messagesContainer.appendChild(messageDiv);
         
@@ -226,11 +239,15 @@ class ChatApp {
     }
 
     private extractNutritionData(toolReturns: any[]): NutritionData | null {
+        console.log('Extracting nutrition data from:', toolReturns);
         for (const toolReturn of toolReturns) {
+            console.log('Checking tool return:', toolReturn.tool_name, 'has content:', !!toolReturn.content);
             if (toolReturn.tool_name === 'calculate_nutrition_by_food_description' && toolReturn.content) {
+                console.log('Found nutrition data:', toolReturn.content);
                 return toolReturn.content as NutritionData;
             }
         }
+        console.log('No nutrition data found');
         return null;
     }
 
@@ -403,7 +420,6 @@ class ChatApp {
     }
 }
 
-// Initialize the chat app when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+function initChatApp() {
     new ChatApp();
-});
+}
