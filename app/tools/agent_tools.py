@@ -37,3 +37,24 @@ def create_agent_tools(agent: Agent):
             nutrition_data
         )
         return result
+
+    @agent.tool
+    def calculate_nutrition_by_image(
+        ctx: RunContext,
+        query: NutritionInputPayload,
+    ) -> NutritionServiceResponse:
+        """
+        Calculate nutrition information based on image data.
+
+        Args:
+            query: NutritionInputPayload containing image URL and other parameters
+        """
+        # Create NutritionInputPayload from individual parameters
+
+        result = NutritionService.get_nutrition_data(query=query)
+        return result
+
+    return [
+        calculate_nutrition_by_food_description,
+        calculate_nutrition_by_image,
+    ]

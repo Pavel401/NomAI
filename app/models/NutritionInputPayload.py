@@ -8,6 +8,9 @@ class NutritionInputPayload(BaseModel):
     """
 
     imageData: Optional[str] = Field(None, description="Base64 encoded image data")
+    imageUrl: Optional[str] = (
+        Field(None, description="URL of the image for nutrition analysis"),
+    )
     food_description: Optional[str] = Field(
         ..., description="Description of the food item"
     )
@@ -25,6 +28,7 @@ class NutritionInputPayload(BaseModel):
         json_schema_extra = {
             "example": {
                 "imageData": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ...",
+                "imageUrl": "https://example.com/image.jpg",
                 "food_description": "Chicken Caesar Salad with croutons",
                 "dietaryPreferences": ["low-carb", "high-protein"],
                 "allergies": ["nuts", "shellfish"],

@@ -32,26 +32,18 @@ def generate_nutrition_info(query: NutritionInputPayload, request: Request):
 
     try:
         # Validate required fields
-        if not query.imageData:
+        if not query.imageUrl:
             raise ValidationException(
-                message="Image data is required",
+                message="Image imageUrl is required",
                 error_code=ErrorCode.MISSING_REQUIRED_FIELD,
-                field="imageData",
+                field="imageUrl",
                 constraint="required",
                 suggestion="Please provide a valid base64 encoded image",
             )
 
-        # Extract query parameters
-        user_message = query.food_description
-        base64_img = query.imageData
-
         # Call the nutrition service (which handles its own errors internally)
         response = NutritionService.get_nutrition_data(
-            base64_img,
-            user_message,
-            query.selectedGoals,
-            query.dietaryPreferences,
-            query.allergies,
+            query=query,
         )
 
         # Return the response (could be success or error)

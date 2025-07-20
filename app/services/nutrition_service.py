@@ -14,6 +14,9 @@ from app.models.ServiceResponse import (
     ErrorResponse,
     ServiceMetadata,
 )
+
+import requests
+
 from app.utils.token import calculate_cost
 from app.exceptions import (
     ExternalServiceException,
@@ -69,11 +72,7 @@ class NutritionService:
 
     @staticmethod
     def get_nutrition_data(
-        base64_img: str,
-        user_message: str = None,
-        selectedGoal: list = None,
-        selectedDiet: list = None,
-        selectedAllergy: list = None,
+        query: NutritionInputPayload,
     ) -> NutritionServiceResponse:
         """
         Analyze food image and extract nutritional information using Gemini AI with comprehensive error handling.
@@ -92,15 +91,15 @@ class NutritionService:
 
         try:
             # Validate and decode base64 image - ImageService handles its own exceptions
-            image_bytes = ImageService.getImageBytes(base64_img)
+            # image_bytes = ImageService.getImageBytes(base64_img)
 
             # Generate the complete prompt using PromptService
             try:
                 prompt = PromptService.get_nutrition_analysis_prompt_for_image(
-                    user_message=user_message,
-                    selectedGoal=selectedGoal,
-                    selectedDiet=selectedDiet,
-                    selectedAllergy=selectedAllergy,
+                    user_message=query.food_description,
+                    selectedGoal=query.selectedGoals,
+                    selectedDiet=query.dietaryPreferences,
+                    selectedAllergy=query.allergies,
                 )
             except Exception as e:
                 raise BusinessLogicException(
@@ -110,6 +109,10 @@ class NutritionService:
 
             # Get client instance - _get_client handles its own exceptions
             client = NutritionService._get_client()
+
+            image_path = query.imageUrl
+            image_bytes = requests.get(image_path).content
+            image = types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
 
             # Send multimodal input (image + prompt) to Gemini
             try:
@@ -121,10 +124,7 @@ class NutritionService:
                         "temperature": 0,
                     },
                     model="gemini-2.0-flash",
-                    contents=[
-                        types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
-                        types.Part.from_text(text=prompt),
-                    ],
+                    contents=[prompt, image],
                 )
             except Exception as e:
                 error_message = str(e).lower()

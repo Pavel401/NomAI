@@ -522,7 +522,7 @@
 
             setupEventListeners() {
                 this.sendButton.addEventListener('click', () => this.sendMessage());
-                
+
                 this.messageInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -536,6 +536,8 @@
 
                 this.userIdInput.addEventListener('input', () => {
                     this.updateUserDisplay();
+                    this.clearMessages();
+                    this.loadMessages();
                 });
 
                 this.userIdInput.addEventListener('keydown', (e) => {
@@ -699,7 +701,6 @@
 
             displayMessage(message) {
                 const messageDiv = document.createElement('div');
-                
                 if (message.is_system) {
                     messageDiv.className = 'message system';
                 } else {
@@ -709,8 +710,30 @@
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'message-content';
                 messageDiv.appendChild(contentDiv);
-                
-                this.updateMessageContent(messageDiv, message);
+
+                // Render tool_calls and tool_returns if present
+                let extraHtml = '';
+                if (message.tool_calls && message.tool_calls.length > 0) {
+                    extraHtml += `<div class="tool-section"><strong>🔧 Tool Calls:</strong><ul style="margin:0 0 0 1em;">`;
+                    message.tool_calls.forEach(tc => {
+                        extraHtml += `<li><strong>${tc.tool_name}</strong> <code>${tc.args}</code> <span style="color:#888;">(id: ${tc.tool_call_id})</span></li>`;
+                    });
+                    extraHtml += `</ul></div>`;
+                }
+                if (message.tool_returns && message.tool_returns.length > 0) {
+                    extraHtml += `<div class="tool-section"><strong>🟢 Tool Returns:</strong><ul style="margin:0 0 0 1em;">`;
+                    message.tool_returns.forEach(tr => {
+                        extraHtml += `<li><strong>${tr.tool_name}</strong> <span style="color:#888;">(id: ${tr.tool_call_id})</span><br><pre style="white-space:pre-wrap;background:#f3f3f3;padding:0.5em;border-radius:6px;">${typeof tr.content === 'object' ? JSON.stringify(tr.content, null, 2) : tr.content}</pre></li>`;
+                    });
+                    extraHtml += `</ul></div>`;
+                }
+
+                // Nutrition rendering if present, else normal content
+                if (message.role === 'model' && message.tool_returns && this.extractNutritionData(message.tool_returns)) {
+                    contentDiv.innerHTML = this.formatNutritionResponse(message.content, this.extractNutritionData(message.tool_returns)) + extraHtml;
+                } else {
+                    contentDiv.innerHTML = this.formatTextContent(message.content) + extraHtml;
+                }
 
                 if (!message.is_system) {
                     const timestamp = document.createElement('div');
@@ -723,19 +746,32 @@
                 this.scrollToBottom();
                 return messageDiv;
             }
+            clearMessages() {
+                this.messagesContainer.innerHTML = '';
+            }
 
             updateMessageContent(messageElement, message) {
                 const contentDiv = messageElement.querySelector('.message-content');
-                
-                if (message.role === 'model' && message.tool_returns && message.tool_returns.length > 0) {
-                    const nutritionData = this.extractNutritionData(message.tool_returns);
-                    if (nutritionData) {
-                        contentDiv.innerHTML = this.formatNutritionResponse(message.content, nutritionData);
-                    } else {
-                        contentDiv.innerHTML = this.formatTextContent(message.content);
-                    }
+                let extraHtml = '';
+                if (message.tool_calls && message.tool_calls.length > 0) {
+                    extraHtml += `<div class="tool-section"><strong>🔧 Tool Calls:</strong><ul style="margin:0 0 0 1em;">`;
+                    message.tool_calls.forEach(tc => {
+                        extraHtml += `<li><strong>${tc.tool_name}</strong> <code>${tc.args}</code> <span style=\"color:#888;\">(id: ${tc.tool_call_id})</span></li>`;
+                    });
+                    extraHtml += `</ul></div>`;
+                }
+                if (message.tool_returns && message.tool_returns.length > 0) {
+                    extraHtml += `<div class="tool-section"><strong>🟢 Tool Returns:</strong><ul style="margin:0 0 0 1em;">`;
+                    message.tool_returns.forEach(tr => {
+                        extraHtml += `<li><strong>${tr.tool_name}</strong> <span style=\"color:#888;\">(id: ${tr.tool_call_id})</span><br><pre style=\"white-space:pre-wrap;background:#f3f3f3;padding:0.5em;border-radius:6px;\">${typeof tr.content === 'object' ? JSON.stringify(tr.content, null, 2) : tr.content}</pre></li>`;
+                    });
+                    extraHtml += `</ul></div>`;
+                }
+
+                if (message.role === 'model' && message.tool_returns && this.extractNutritionData(message.tool_returns)) {
+                    contentDiv.innerHTML = this.formatNutritionResponse(message.content, this.extractNutritionData(message.tool_returns)) + extraHtml;
                 } else {
-                    contentDiv.innerHTML = this.formatTextContent(message.content);
+                    contentDiv.innerHTML = this.formatTextContent(message.content) + extraHtml;
                 }
             }
 
