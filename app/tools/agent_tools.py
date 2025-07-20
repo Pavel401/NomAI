@@ -49,7 +49,6 @@ def create_agent_tools(agent: Agent):
         Args:
             query: NutritionInputPayload containing image URL and other parameters
         """
-        # Create NutritionInputPayload from individual parameters
 
         result = NutritionService.get_nutrition_data(query=query)
         return result
