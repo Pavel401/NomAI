@@ -48,5 +48,4 @@ Don't provide medical advice or diagnoses. Always encourage users to consult wit
         return self.openai_api_key is not None and self.openai_api_key != ""
 
 
-# Global config instance
 chat_config = ChatConfig()

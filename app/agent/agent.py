@@ -71,11 +71,10 @@ def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
                         "timestamp": part.timestamp.isoformat(),
                         "content": part.content,
                     }
-            return None  # Should not be reached if user_prompt_part_found is true
+            return None
 
         if tool_return_parts:
-            # This is a request that contains tool returns. We can represent this
-            # as a special kind of model message for the frontend to display.
+
             message = {
                 "role": "model",
                 "timestamp": tool_return_parts[0].timestamp.isoformat(),
@@ -163,14 +162,11 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from pathlib import Path
 import json
 
-# ... (keep all the existing imports)
 
 from app.services.chat_database import Database
 from app.services.agent_service import AgentService
 
 router = fastapi.APIRouter()
-
-# ... (keep existing helper functions like get_agent, to_chat_message)
 
 
 async def get_chat_db():

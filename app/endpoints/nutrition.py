@@ -41,16 +41,13 @@ def generate_nutrition_info(query: NutritionInputPayload, request: Request):
                 suggestion="Please provide a valid base64 encoded image",
             )
 
-        # Call the nutrition service (which handles its own errors internally)
         response = NutritionService.get_nutrition_data(
             query=query,
         )
 
-        # Return the response (could be success or error)
         return JSONResponse(content=response.to_dict(), status_code=response.status)
 
     except BaseNomAIException as e:
-        # Handle our custom exceptions using the error handler
         execution_time = time.time() - start_time
         error_response = ErrorHandler.handle_custom_exception(
             exception=e, request=request, execution_time=execution_time
@@ -61,7 +58,6 @@ def generate_nutrition_info(query: NutritionInputPayload, request: Request):
         )
 
     except Exception as e:
-        # Handle any other unexpected exceptions
         execution_time = time.time() - start_time
         error_response = ErrorHandler.handle_unexpected_exception(
             exception=e,

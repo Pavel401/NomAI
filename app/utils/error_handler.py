@@ -52,7 +52,7 @@ class ErrorHandler:
                 if is_dev:
                     metadata.stack_trace = traceback.format_exc()
             except:
-                pass  
+                pass
 
         return metadata
 
