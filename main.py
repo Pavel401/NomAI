@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Any, Dict
 from contextlib import asynccontextmanager
 
@@ -13,7 +14,10 @@ from app.middleware.exception_handlers import setup_exception_handlers
 import logfire
 
 # Configure logfire for chat functionality
-logfire.configure(send_to_logfire="if-token-present")
+logfire.configure(
+    send_to_logfire="if-token-present",
+    token=os.getenv("LOGFIRE_TOKEN", "default_token"),
+)
 
 
 @asynccontextmanager
