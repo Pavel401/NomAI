@@ -4,22 +4,36 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>NomAI - Advanced Nutrition Assistant</title>
+        <!-- Material Icons -->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <style>
         :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #e0e7ff;
             --success-color: #10b981;
+            --success-light: #d1fae5;
             --warning-color: #f59e0b;
+            --warning-light: #fef3c7;
             --danger-color: #ef4444;
-            --background: #f8fafc;
+            --danger-light: #fee2e2;
+            --background: #fafafa;
             --surface: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            --border-radius: 12px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --surface-elevated: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --border: #e5e7eb;
+            --border-light: #f3f4f6;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #047857 100%);
         }
 
         * {
@@ -29,13 +43,14 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gradient-primary);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 1rem;
+            font-weight: 400;
         }
 
         .chat-container {
@@ -43,68 +58,120 @@
             max-width: 900px;
             height: 95vh;
             background: var(--surface);
-            border-radius: 20px;
+            border-radius: 24px;
             box-shadow: var(--shadow-lg);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-light);
         }
 
         .chat-header {
-            background: linear-gradient(135deg, var(--success-color), #059669);
+            background: var(--gradient-success);
             color: white;
-            padding: 1.5rem;
+            padding: 2rem 1.5rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='20' cy='20' r='4'/%3E%3Ccircle cx='40' cy='40' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
         }
 
         .header-left {
             display: flex;
             align-items: center;
             gap: 1rem;
+            position: relative;
+            z-index: 1;
         }
 
         .logo {
-            font-size: 2rem;
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .header-info h1 {
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 0.25rem;
+            letter-spacing: -0.025em;
         }
 
         .header-info p {
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             opacity: 0.9;
+            font-weight: 400;
         }
 
         .user-info {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.75rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+            transition: var(--transition);
+        }
+
+        .user-info:hover {
             background: rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            font-size: 0.9rem;
+            transform: translateY(-1px);
+        }
+
+        .user-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 1.5rem;
+            padding: 2rem;
             background: var(--background);
             scroll-behavior: smooth;
+            position: relative;
         }
 
         .message {
-            margin-bottom: 1.5rem;
-            animation: slideIn 0.3s ease-out;
+            margin-bottom: 2rem;
+            animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
         }
 
-        @keyframes slideIn {
+        @keyframes slideInUp {
             from {
                 opacity: 0;
                 transform: translateY(20px);
@@ -116,30 +183,36 @@
         }
 
         .message.user {
-            display: flex;
-            justify-content: flex-end;
+            align-items: flex-end;
         }
 
         .message.model {
+            align-items: flex-start;
+        }
+
+        .message-wrapper {
+            max-width: 75%;
             display: flex;
-            justify-content: flex-start;
+            flex-direction: column;
+            position: relative;
         }
 
         .message-content {
-            max-width: 75%;
-            padding: 1rem 1.25rem;
+            padding: 1.25rem 1.5rem;
             border-radius: var(--border-radius);
             word-wrap: break-word;
             line-height: 1.6;
             font-size: 0.95rem;
             position: relative;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid transparent;
         }
 
         .message.user .message-content {
             background: var(--primary-color);
             color: white;
             border-bottom-right-radius: 4px;
-            box-shadow: var(--shadow);
+            font-weight: 500;
         }
 
         .message.model .message-content {
@@ -147,45 +220,122 @@
             color: var(--text-primary);
             border: 1px solid var(--border);
             border-bottom-left-radius: 4px;
-            box-shadow: var(--shadow);
         }
 
         .message-timestamp {
             font-size: 0.75rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             margin-top: 0.5rem;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message.user .message-timestamp {
+            align-self: flex-end;
             text-align: right;
         }
 
         .message.model .message-timestamp {
+            align-self: flex-start;
             text-align: left;
         }
 
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            display: inline-block;
+        }
+
         .message.system {
-            display: flex;
-            justify-content: center;
+            align-items: center;
             margin: 1rem 0;
         }
 
+        .message.system .message-wrapper {
+            max-width: 60%;
+        }
+
         .message.system .message-content {
-            background: var(--background);
+            background: var(--surface-elevated);
             color: var(--text-secondary);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
+            border-radius: 50px;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.875rem;
             font-style: italic;
-            max-width: 60%;
             text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .tooltip:hover::before,
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-8px);
         }
 
         .nutrition-info {
             background: var(--surface);
-            border: 2px solid var(--success-color);
+            border: 2px solid var(--success-light);
             border-radius: var(--border-radius);
             padding: 1.5rem;
             margin-top: 1rem;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .nutrition-info::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            height: 4px;
+            background: var(--gradient-success);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
         }
 
         .nutrition-section {
@@ -203,33 +353,49 @@
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
         }
 
         .nutrition-item {
             background: var(--background);
-            padding: 1rem;
+            padding: 1.25rem;
             margin: 0.75rem 0;
-            border-radius: 8px;
+            border-radius: var(--border-radius-sm);
             border-left: 4px solid var(--success-color);
             transition: var(--transition);
+            border: 1px solid var(--border-light);
         }
 
         .nutrition-item:hover {
             transform: translateX(4px);
             box-shadow: var(--shadow);
+            background: var(--surface);
         }
 
         .health-score {
             display: inline-flex;
             align-items: center;
+            gap: 0.5rem;
             background: var(--success-color);
             color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            padding: 0.375rem 0.875rem;
+            border-radius: 50px;
             font-size: 0.8rem;
             font-weight: 600;
-            margin-left: 0.5rem;
+            margin-left: 0.75rem;
+            transition: var(--transition);
         }
 
         .health-score.low {
@@ -241,54 +407,88 @@
             color: var(--text-primary);
         }
 
+        .health-score-icon {
+            font-size: 16px;
+        }
+
         .chat-input {
             padding: 1.5rem;
             background: var(--surface);
             border-top: 1px solid var(--border);
+            backdrop-filter: blur(20px);
         }
 
         .input-container {
             display: flex;
             gap: 1rem;
             align-items: flex-end;
+            position: relative;
+        }
+
+        .input-field-wrapper {
+            flex: 1;
+            position: relative;
         }
 
         .user-id-input {
-            flex: none;
-            width: 120px;
-            padding: 0.75rem 1rem;
+            width: 140px;
+            padding: 0.875rem 1.25rem;
             border: 2px solid var(--border);
-            border-radius: 25px;
+            border-radius: 50px;
             font-size: 0.9rem;
+            font-weight: 500;
             outline: none;
             transition: var(--transition);
-            background: var(--background);
+            background: var(--surface);
+            color: var(--text-primary);
         }
 
         .user-id-input:focus {
             border-color: var(--primary-color);
             background: var(--surface);
+            box-shadow: 0 0 0 3px var(--primary-light);
         }
 
         .input-field {
-            flex: 1;
-            padding: 1rem 1.25rem;
+            width: 100%;
+            padding: 1rem 1.5rem 1rem 3rem;
             border: 2px solid var(--border);
-            border-radius: 25px;
+            border-radius: 24px;
             font-size: 1rem;
             outline: none;
             resize: none;
-            min-height: 50px;
+            min-height: 56px;
             max-height: 120px;
             font-family: inherit;
             transition: var(--transition);
-            background: var(--background);
+            background: var(--surface);
+            color: var(--text-primary);
+            line-height: 1.5;
         }
 
         .input-field:focus {
             border-color: var(--primary-color);
             background: var(--surface);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 20px;
+            transition: var(--transition);
+            z-index: 1;
+        }
+
+        .input-field:focus + .input-icon {
+            color: var(--primary-color);
         }
 
         .send-button {
@@ -296,27 +496,33 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: var(--transition);
-            font-size: 1.2rem;
+            font-size: 24px;
             box-shadow: var(--shadow);
+            flex-shrink: 0;
         }
 
         .send-button:hover:not(:disabled) {
             background: var(--primary-hover);
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.05);
             box-shadow: var(--shadow-lg);
         }
 
         .send-button:disabled {
-            background: var(--text-secondary);
+            background: var(--text-muted);
             cursor: not-allowed;
             transform: none;
+            opacity: 0.6;
+        }
+
+        .send-button:active:not(:disabled) {
+            transform: translateY(0) scale(0.95);
         }
 
         .typing-indicator {
@@ -324,21 +530,36 @@
             align-items: center;
             color: var(--text-secondary);
             font-style: italic;
-            margin: 1rem 0;
-            padding: 1rem;
+            margin: 1.5rem 0;
+            padding: 1.25rem;
             background: var(--surface);
             border-radius: var(--border-radius);
             border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            gap: 0.75rem;
+        }
+
+        .typing-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--gradient-success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            flex-shrink: 0;
         }
 
         .typing-dots {
             display: inline-flex;
-            margin-left: 0.75rem;
+            margin-left: 0.5rem;
         }
 
         .typing-dots span {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             background: var(--primary-color);
             border-radius: 50%;
             margin: 0 2px;
@@ -365,39 +586,52 @@
         }
 
         .error-message {
-            background: rgba(239, 68, 68, 0.1);
+            background: var(--danger-light);
             color: var(--danger-color);
-            padding: 1rem;
+            padding: 1.25rem;
             border-radius: var(--border-radius);
-            margin: 1rem 0;
+            margin: 1.5rem 0;
             border: 1px solid rgba(239, 68, 68, 0.2);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .error-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--danger-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
         }
 
         .chat-messages::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         .chat-messages::-webkit-scrollbar-track {
-            background: var(--background);
-            border-radius: 4px;
+            background: transparent;
         }
 
         .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--text-secondary);
-            border-radius: 4px;
+            background: var(--text-muted);
+            border-radius: 3px;
             transition: var(--transition);
         }
 
         .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: var(--text-primary);
+            background: var(--text-secondary);
         }
 
         .nutrition-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
             margin-top: 1rem;
         }
@@ -405,58 +639,130 @@
         .nutrition-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            padding: 1.25rem;
             text-align: center;
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
         .nutrition-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-4px);
             box-shadow: var(--shadow);
+            border-color: var(--primary-color);
+        }
+
+        .nutrition-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+
+        .nutrition-card:hover::before {
+            transform: scaleX(1);
         }
 
         .nutrition-value {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
             color: var(--primary-color);
+            margin-bottom: 0.25rem;
         }
 
         .nutrition-label {
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             color: var(--text-secondary);
-            margin-top: 0.25rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
+        /* Modern button styles */
+        .action-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .action-button:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Loading states */
+        .loading-skeleton {
+            background: linear-gradient(90deg, var(--border-light) 25%, var(--border) 50%, var(--border-light) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: var(--border-radius-sm);
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Responsive design improvements */
         @media (max-width: 768px) {
             .chat-container {
                 width: 100%;
                 height: 100vh;
                 border-radius: 0;
+                max-width: none;
             }
 
             .chat-header {
-                padding: 1rem;
+                padding: 1.5rem 1rem 1rem;
             }
 
             .header-left {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 0.5rem;
+                gap: 0.75rem;
             }
 
             .user-info {
                 order: -1;
                 align-self: flex-end;
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
             }
 
-            .message-content {
-                max-width: 90%;
+            .chat-messages {
+                padding: 1rem;
+            }
+
+            .message-wrapper {
+                max-width: 85%;
             }
 
             .input-container {
                 flex-direction: column;
-                gap: 0.75rem;
+                gap: 1rem;
             }
 
             .user-id-input {
@@ -464,8 +770,153 @@
             }
 
             .nutrition-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
             }
+
+            .nutrition-card {
+                padding: 1rem;
+            }
+
+            .nutrition-value {
+                font-size: 1.5rem;
+            }
+
+            .send-button {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chat-messages {
+                padding: 0.75rem;
+            }
+
+            .message-wrapper {
+                max-width: 92%;
+            }
+
+            .nutrition-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dark mode support (optional) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #0f172a;
+                --surface: #1e293b;
+                --surface-elevated: #334155;
+                --text-primary: #f1f5f9;
+                --text-secondary: #94a3b8;
+                --text-muted: #64748b;
+                --border: #334155;
+                --border-light: #1e293b;
+            }
+        }
+
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Tool call and tool return styling */
+        .tool-section {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--surface-elevated);
+            border-radius: var(--border-radius-sm);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .tool-section strong {
+            color: var(--primary-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .tool-return-code {
+            background: #1e1e1e !important;
+            color: #d4d4d4 !important;
+            padding: 1rem !important;
+            border-radius: var(--border-radius-sm) !important;
+            white-space: pre-wrap !important;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+            font-size: 0.85rem !important;
+            line-height: 1.5 !important;
+            border: 1px solid #333 !important;
+            margin-top: 0.5rem !important;
+            overflow-x: auto !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* JSON syntax highlighting for tool returns */
+        .tool-return-code {
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%) !important;
+        }
+
+        /* Dark mode tool return styling */
+        @media (prefers-color-scheme: dark) {
+            .tool-section {
+                background: #1a1a1a;
+                border-left-color: #6366f1;
+            }
+            
+            .tool-return-code {
+                background: linear-gradient(135deg, #0d1117 0%, #161b22 100%) !important;
+                color: #f0f6fc !important;
+                border-color: #30363d !important;
+            }
+        }
+
+        /* Light mode alternative for better contrast */
+        .message.model .tool-return-code {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+            color: #1e293b !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        /* Enhanced syntax highlighting colors */
+        .tool-return-code .json-string {
+            color: #98c379 !important;
+        }
+
+        .tool-return-code .json-number {
+            color: #d19a66 !important;
+        }
+
+        .tool-return-code .json-boolean {
+            color: #56b6c2 !important;
+        }
+
+        .tool-return-code .json-null {
+            color: #e06c75 !important;
+        }
+
+        .tool-return-code .json-key {
+            color: #e5c07b !important;
+            font-weight: bold !important;
         }
     </style>
     </head>
@@ -473,14 +924,19 @@
         <div class="chat-container">
             <div class="chat-header">
                 <div class="header-left">
-                    <div class="logo">🥗</div>
+                    <div class="logo">
+                        <span class="material-icons-outlined">restaurant_menu</span>
+                    </div>
                     <div class="header-info">
                         <h1>NomAI</h1>
                         <p>Your AI Nutrition Assistant</p>
                     </div>
                 </div>
-                <div class="user-info" id="userDisplay">
-                    👤 <span id="currentUser">Guest</span>
+                <div class="user-info tooltip" data-tooltip="Current user session" id="userDisplay">
+                    <div class="user-icon">
+                        <span class="material-icons-outlined">person</span>
+                    </div>
+                    <span id="currentUser">Guest</span>
                 </div>
             </div>
             <div class="chat-messages" id="messages"></div>
@@ -488,17 +944,26 @@
                 <div class="input-container">
                     <input
                         id="userIdInput"
-                        class="user-id-input"
+                        class="user-id-input tooltip"
                         type="text"
                         placeholder="User ID"
-                        value="Pavel" />
-                    <textarea
-                        id="messageInput"
-                        class="input-field"
-                        placeholder="Describe your meal or ask about nutrition..."
-                        rows="1"></textarea>
-                    <button id="sendButton" class="send-button">
-                        ↗
+                        value="Pavel"
+                        data-tooltip="Enter your unique user ID" />
+                    <div class="input-field-wrapper">
+                        <textarea
+                            id="messageInput"
+                            class="input-field"
+                            placeholder="Describe your meal or ask about nutrition..."
+                            rows="1"
+                            aria-label="Type your nutrition question"></textarea>
+                        <span class="input-icon material-icons-outlined">chat</span>
+                    </div>
+                    <button 
+                        id="sendButton" 
+                        class="send-button tooltip" 
+                        data-tooltip="Send message (Enter)"
+                        aria-label="Send message">
+                        <span class="material-icons-outlined">send</span>
                     </button>
                 </div>
             </div>
@@ -707,23 +1172,50 @@
                     messageDiv.className = `message ${message.role}`;
                 }
 
+                const messageWrapper = document.createElement('div');
+                messageWrapper.className = 'message-wrapper';
+                messageDiv.appendChild(messageWrapper);
+
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'message-content';
-                messageDiv.appendChild(contentDiv);
+                messageWrapper.appendChild(contentDiv);
 
                 // Render tool_calls and tool_returns if present
                 let extraHtml = '';
                 if (message.tool_calls && message.tool_calls.length > 0) {
-                    extraHtml += `<div class="tool-section"><strong>🔧 Tool Calls:</strong><ul style="margin:0 0 0 1em;">`;
+                    extraHtml += `<div class="tool-section">
+                        <strong>
+                            <span class="material-icons-outlined" style="font-size: 18px;">build</span>
+                            Tool Calls
+                        </strong>
+                        <ul style="margin:0 0 0 1em; list-style: none; padding-left: 0;">`;
                     message.tool_calls.forEach(tc => {
-                        extraHtml += `<li><strong>${tc.tool_name}</strong> <code>${tc.args}</code> <span style="color:#888;">(id: ${tc.tool_call_id})</span></li>`;
+                        extraHtml += `<li style="margin: 0.5rem 0; padding: 0.75rem; background: var(--background); border-radius: 6px; border-left: 3px solid var(--warning-color);">
+                            <div style="font-weight: 600; color: var(--primary-color); margin-bottom: 0.25rem;">${tc.tool_name}</div>
+                            <code style="background: rgba(0,0,0,0.1); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">${tc.args}</code>
+                            <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">ID: ${tc.tool_call_id}</div>
+                        </li>`;
                     });
                     extraHtml += `</ul></div>`;
                 }
                 if (message.tool_returns && message.tool_returns.length > 0) {
-                    extraHtml += `<div class="tool-section"><strong>🟢 Tool Returns:</strong><ul style="margin:0 0 0 1em;">`;
+                    extraHtml += `<div class="tool-section">
+                        <strong>
+                            <span class="material-icons-outlined" style="font-size: 18px;">assignment_turned_in</span>
+                            Tool Returns
+                        </strong>
+                        <ul style="margin:0 0 0 1em; list-style: none; padding-left: 0;">`;
                     message.tool_returns.forEach(tr => {
-                        extraHtml += `<li><strong>${tr.tool_name}</strong> <span style="color:#888;">(id: ${tr.tool_call_id})</span><br><pre style="white-space:pre-wrap;background:#f3f3f3;padding:0.5em;border-radius:6px;">${typeof tr.content === 'object' ? JSON.stringify(tr.content, null, 2) : tr.content}</pre></li>`;
+                        const content = typeof tr.content === 'object' ? JSON.stringify(tr.content, null, 2) : tr.content;
+                        const highlightedContent = typeof tr.content === 'object' ? this.syntaxHighlight(tr.content) : content;
+                        extraHtml += `<li style="margin: 0.5rem 0;">
+                            <div style="font-weight: 600; color: var(--success-color); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="material-icons-outlined" style="font-size: 16px;">check_circle</span>
+                                ${tr.tool_name}
+                                <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: normal;">ID: ${tr.tool_call_id}</span>
+                            </div>
+                            <pre class="tool-return-code">${highlightedContent}</pre>
+                        </li>`;
                     });
                     extraHtml += `</ul></div>`;
                 }
@@ -738,8 +1230,27 @@
                 if (!message.is_system) {
                     const timestamp = document.createElement('div');
                     timestamp.className = 'message-timestamp';
-                    timestamp.textContent = this.formatTimestamp(message.timestamp);
-                    messageDiv.appendChild(timestamp);
+                    
+                    const statusIcon = document.createElement('span');
+                    statusIcon.className = 'status-indicator';
+                    statusIcon.title = 'Delivered';
+                    
+                    const timeText = document.createElement('span');
+                    timeText.textContent = this.formatTimestamp(message.timestamp);
+                    
+                    if (message.role === 'user') {
+                        timestamp.appendChild(timeText);
+                        timestamp.appendChild(statusIcon);
+                    } else {
+                        const aiIcon = document.createElement('span');
+                        aiIcon.className = 'material-icons-outlined';
+                        aiIcon.textContent = 'smart_toy';
+                        aiIcon.style.fontSize = '16px';
+                        timestamp.appendChild(aiIcon);
+                        timestamp.appendChild(timeText);
+                    }
+                    
+                    messageWrapper.appendChild(timestamp);
                 }
 
                 this.messagesContainer.appendChild(messageDiv);
@@ -754,16 +1265,39 @@
                 const contentDiv = messageElement.querySelector('.message-content');
                 let extraHtml = '';
                 if (message.tool_calls && message.tool_calls.length > 0) {
-                    extraHtml += `<div class="tool-section"><strong>🔧 Tool Calls:</strong><ul style="margin:0 0 0 1em;">`;
+                    extraHtml += `<div class="tool-section">
+                        <strong>
+                            <span class="material-icons-outlined" style="font-size: 18px;">build</span>
+                            Tool Calls
+                        </strong>
+                        <ul style="margin:0 0 0 1em; list-style: none; padding-left: 0;">`;
                     message.tool_calls.forEach(tc => {
-                        extraHtml += `<li><strong>${tc.tool_name}</strong> <code>${tc.args}</code> <span style=\"color:#888;\">(id: ${tc.tool_call_id})</span></li>`;
+                        extraHtml += `<li style="margin: 0.5rem 0; padding: 0.75rem; background: var(--background); border-radius: 6px; border-left: 3px solid var(--warning-color);">
+                            <div style="font-weight: 600; color: var(--primary-color); margin-bottom: 0.25rem;">${tc.tool_name}</div>
+                            <code style="background: rgba(0,0,0,0.1); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">${tc.args}</code>
+                            <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">ID: ${tc.tool_call_id}</div>
+                        </li>`;
                     });
                     extraHtml += `</ul></div>`;
                 }
                 if (message.tool_returns && message.tool_returns.length > 0) {
-                    extraHtml += `<div class="tool-section"><strong>🟢 Tool Returns:</strong><ul style="margin:0 0 0 1em;">`;
+                    extraHtml += `<div class="tool-section">
+                        <strong>
+                            <span class="material-icons-outlined" style="font-size: 18px;">assignment_turned_in</span>
+                            Tool Returns
+                        </strong>
+                        <ul style="margin:0 0 0 1em; list-style: none; padding-left: 0;">`;
                     message.tool_returns.forEach(tr => {
-                        extraHtml += `<li><strong>${tr.tool_name}</strong> <span style=\"color:#888;\">(id: ${tr.tool_call_id})</span><br><pre style=\"white-space:pre-wrap;background:#f3f3f3;padding:0.5em;border-radius:6px;\">${typeof tr.content === 'object' ? JSON.stringify(tr.content, null, 2) : tr.content}</pre></li>`;
+                        const content = typeof tr.content === 'object' ? JSON.stringify(tr.content, null, 2) : tr.content;
+                        const highlightedContent = typeof tr.content === 'object' ? this.syntaxHighlight(tr.content) : content;
+                        extraHtml += `<li style="margin: 0.5rem 0;">
+                            <div style="font-weight: 600; color: var(--success-color); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="material-icons-outlined" style="font-size: 16px;">check_circle</span>
+                                ${tr.tool_name}
+                                <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: normal;">ID: ${tr.tool_call_id}</span>
+                            </div>
+                            <pre class="tool-return-code">${highlightedContent}</pre>
+                        </li>`;
                     });
                     extraHtml += `</ul></div>`;
                 }
@@ -784,6 +1318,29 @@
                 return null;
             }
 
+            // Function to apply syntax highlighting to JSON
+            syntaxHighlight(json) {
+                if (typeof json !== 'string') {
+                    json = JSON.stringify(json, undefined, 2);
+                }
+                json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                    let cls = 'json-number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'json-key';
+                        } else {
+                            cls = 'json-string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'json-boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'json-null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                });
+            }
+
             formatNutritionResponse(content, nutritionData) {
                 let html = '';
                 
@@ -795,9 +1352,9 @@
                 
                 html += `<div class="nutrition-info">`;
                 
-                // Header section
+                // Header section with improved icon
                 html += `<div class="nutrition-section">`;
-                html += `<h4>📊 ${data.foodName}</h4>`;
+                html += `<h4><div class="section-icon"><span class="material-icons-outlined">analytics</span></div>${data.foodName}</h4>`;
                 html += `<p><strong>Portion:</strong> ${data.portionSize} ${data.portion}</p>`;
                 html += `<p><strong>Analysis Confidence:</strong> ${data.confidenceScore}/10</p>`;
                 html += `</div>`;
@@ -807,21 +1364,21 @@
                     const totalNutrition = this.calculateTotalNutrition(data.ingredients);
                     
                     html += `<div class="nutrition-section">`;
-                    html += `<h4>🥗 Nutritional Breakdown</h4>`;
+                    html += `<h4><div class="section-icon"><span class="material-icons-outlined">pie_chart</span></div>Nutritional Breakdown</h4>`;
                     html += `<div class="nutrition-grid">`;
-                    html += `<div class="nutrition-card">
+                    html += `<div class="nutrition-card tooltip" data-tooltip="Total energy content">
                         <div class="nutrition-value">${totalNutrition.calories}</div>
                         <div class="nutrition-label">Calories</div>
                     </div>`;
-                    html += `<div class="nutrition-card">
+                    html += `<div class="nutrition-card tooltip" data-tooltip="Muscle building macronutrient">
                         <div class="nutrition-value">${totalNutrition.protein}g</div>
                         <div class="nutrition-label">Protein</div>
                     </div>`;
-                    html += `<div class="nutrition-card">
+                    html += `<div class="nutrition-card tooltip" data-tooltip="Primary energy source">
                         <div class="nutrition-value">${totalNutrition.carbs}g</div>
                         <div class="nutrition-label">Carbohydrates</div>
                     </div>`;
-                    html += `<div class="nutrition-card">
+                    html += `<div class="nutrition-card tooltip" data-tooltip="Essential fats for body functions">
                         <div class="nutrition-value">${totalNutrition.fat}g</div>
                         <div class="nutrition-label">Fat</div>
                     </div>`;
@@ -831,12 +1388,16 @@
                     // Individual ingredients
                     if (data.ingredients.length > 1) {
                         html += `<div class="nutrition-section">`;
-                        html += `<h4>🔍 Ingredient Analysis</h4>`;
+                        html += `<h4><div class="section-icon"><span class="material-icons-outlined">search</span></div>Ingredient Analysis</h4>`;
                         data.ingredients.forEach(ingredient => {
                             const healthScoreClass = ingredient.healthScore >= 7 ? '' : ingredient.healthScore >= 5 ? 'medium' : 'low';
+                            const scoreIcon = ingredient.healthScore >= 7 ? 'check_circle' : ingredient.healthScore >= 5 ? 'warning' : 'error';
                             html += `<div class="nutrition-item">`;
                             html += `<strong>${ingredient.name}</strong>`;
-                            html += `<span class="health-score ${healthScoreClass}">Score: ${ingredient.healthScore}/10</span><br>`;
+                            html += `<span class="health-score ${healthScoreClass}">
+                                <span class="health-score-icon material-icons-outlined">${scoreIcon}</span>
+                                Score: ${ingredient.healthScore}/10
+                            </span><br>`;
                             html += `<em>Calories: ${ingredient.calories} | Protein: ${ingredient.protein}g | Carbs: ${ingredient.carbs}g | Fat: ${ingredient.fat}g</em><br>`;
                             html += `<small style="margin-top: 0.5rem; display: block;">${ingredient.healthComments}</small>`;
                             html += `</div>`;
@@ -847,10 +1408,14 @@
 
                 // Overall health assessment
                 const overallScoreClass = data.overallHealthScore >= 7 ? '' : data.overallHealthScore >= 5 ? 'medium' : 'low';
+                const overallIcon = data.overallHealthScore >= 7 ? 'check_circle' : data.overallHealthScore >= 5 ? 'warning' : 'error';
                 html += `<div class="nutrition-section">`;
-                html += `<h4>💡 Health Assessment</h4>`;
+                html += `<h4><div class="section-icon"><span class="material-icons-outlined">health_and_safety</span></div>Health Assessment</h4>`;
                 html += `<div class="nutrition-item" style="border-left-color: ${data.overallHealthScore >= 7 ? 'var(--success-color)' : data.overallHealthScore >= 5 ? 'var(--warning-color)' : 'var(--danger-color)'};">`;
-                html += `<span class="health-score ${overallScoreClass}">Overall Score: ${data.overallHealthScore}/10</span><br>`;
+                html += `<span class="health-score ${overallScoreClass}">
+                    <span class="health-score-icon material-icons-outlined">${overallIcon}</span>
+                    Overall Score: ${data.overallHealthScore}/10
+                </span><br>`;
                 html += `<p style="margin-top: 0.75rem;">${data.overallHealthComments}</p>`;
                 html += `</div>`;
                 html += `</div>`;
@@ -858,13 +1423,13 @@
                 // Health concerns
                 if (data.primaryConcerns && data.primaryConcerns.length > 0) {
                     html += `<div class="nutrition-section">`;
-                    html += `<h4>⚠️ Health Concerns</h4>`;
+                    html += `<h4><div class="section-icon"><span class="material-icons-outlined">warning</span></div>Health Concerns</h4>`;
                     data.primaryConcerns.forEach(concern => {
                         html += `<div class="nutrition-item" style="border-left-color: var(--warning-color);">`;
                         html += `<strong>${concern.issue}</strong><br>`;
                         html += `<p style="margin: 0.5rem 0;">${concern.explanation}</p>`;
                         if (concern.recommendations && concern.recommendations.length > 0) {
-                            html += `<div style="margin-top: 0.75rem;"><strong>💡 Recommendations:</strong></div>`;
+                            html += `<div style="margin-top: 0.75rem;"><strong><span class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">lightbulb</span> Recommendations:</strong></div>`;
                             concern.recommendations.forEach(rec => {
                                 html += `<div style="margin: 0.25rem 0; padding-left: 1rem;">• <strong>${rec.food}</strong> (${rec.quantity}): ${rec.reasoning}</div>`;
                             });
@@ -877,12 +1442,16 @@
                 // Healthier alternatives
                 if (data.suggestAlternatives && data.suggestAlternatives.length > 0) {
                     html += `<div class="nutrition-section">`;
-                    html += `<h4>🔄 Healthier Alternatives</h4>`;
+                    html += `<h4><div class="section-icon"><span class="material-icons-outlined">swap_horiz</span></div>Healthier Alternatives</h4>`;
                     data.suggestAlternatives.forEach(alt => {
                         const altScoreClass = alt.healthScore >= 7 ? '' : alt.healthScore >= 5 ? 'medium' : 'low';
+                        const altIcon = alt.healthScore >= 7 ? 'check_circle' : alt.healthScore >= 5 ? 'warning' : 'error';
                         html += `<div class="nutrition-item" style="border-left-color: var(--primary-color);">`;
                         html += `<strong>${alt.name}</strong>`;
-                        html += `<span class="health-score ${altScoreClass}">${alt.healthScore}/10</span><br>`;
+                        html += `<span class="health-score ${altScoreClass}">
+                            <span class="health-score-icon material-icons-outlined">${altIcon}</span>
+                            ${alt.healthScore}/10
+                        </span><br>`;
                         html += `<em>Calories: ${alt.calories} | Protein: ${alt.protein}g | Carbs: ${alt.carbs}g | Fat: ${alt.fat}g</em><br>`;
                         html += `<p style="margin-top: 0.5rem;">${alt.healthComments}</p>`;
                         html += `</div>`;
@@ -933,11 +1502,16 @@
                     const typingDiv = document.createElement('div');
                     typingDiv.className = 'typing-indicator';
                     typingDiv.innerHTML = `
-                        🤖 NomAI is analyzing your nutrition data
-                        <div class="typing-dots">
-                            <span></span>
-                            <span></span>
-                            <span></span>
+                        <div class="typing-avatar">
+                            <span class="material-icons-outlined">smart_toy</span>
+                        </div>
+                        <div>
+                            <span style="font-weight: 500;">NomAI is analyzing your nutrition data</span>
+                            <div class="typing-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
                         </div>
                     `;
                     this.messagesContainer.appendChild(typingDiv);
@@ -948,7 +1522,12 @@
             showError(message) {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'error-message';
-                errorDiv.innerHTML = `⚠️ ${message}`;
+                errorDiv.innerHTML = `
+                    <div class="error-icon">
+                        <span class="material-icons-outlined">error</span>
+                    </div>
+                    <div>${message}</div>
+                `;
                 this.messagesContainer.appendChild(errorDiv);
                 this.scrollToBottom();
 
