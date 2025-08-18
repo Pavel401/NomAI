@@ -972,7 +972,8 @@
         <script>
         class EnhancedChatApp {
             constructor() {
-               const BASE_URL = process.env.BASE_URL || "http://localhost:8080";
+                // Dynamically determine the base URL from the current location
+                const BASE_URL = `${window.location.protocol}//${window.location.host}`;
                 this.apiEndpoint = `${BASE_URL}/chat/messages`;
                 this.messagesContainer = document.getElementById('messages');
                 this.messageInput = document.getElementById('messageInput');
