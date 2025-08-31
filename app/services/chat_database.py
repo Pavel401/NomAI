@@ -6,7 +6,14 @@ from typing import List, Dict, Any, Optional
 
 from supabase import create_client, Client
 from datetime import datetime, timezone
-from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelMessagesTypeAdapter,
+    ModelRequest,
+    ModelResponse,
+    ToolCallPart,
+    ToolReturnPart,
+)
 import logfire
 
 
@@ -95,8 +102,13 @@ class Database:
                 except Exception as e:
                     print(f"Error parsing message: {e}")
                     continue
-            print(f"Retrieved {len(messages)} messages for user {user_id}")
-            return messages
+
+            # Fix tool call/tool return message pairs
+            validated_messages = self._validate_tool_message_pairs(messages)
+            print(
+                f"Retrieved {len(messages)} messages, validated to {len(validated_messages)} messages for user {user_id}"
+            )
+            return validated_messages
         except Exception as e:
             print(f"Error getting messages: {e}")
             raise
@@ -126,3 +138,59 @@ class Database:
         except Exception as e:
             print(f"Error getting message by ID: {e}")
             return None
+
+    def _validate_tool_message_pairs(
+        self, messages: List[ModelMessage]
+    ) -> List[ModelMessage]:
+        """
+        Validate and fix tool call/tool return message pairs to ensure OpenAI compatibility.
+        OpenAI requires that messages with role 'tool' must be preceded by messages with 'tool_calls'.
+        """
+        validated_messages = []
+        tool_call_ids = set()
+
+        for i, message in enumerate(messages):
+            if isinstance(message, ModelRequest):
+                # Check for tool return parts without corresponding tool calls
+                has_tool_returns = any(
+                    isinstance(part, ToolReturnPart) for part in message.parts
+                )
+
+                if has_tool_returns:
+                    # Check if there's a corresponding tool call in the previous messages
+                    tool_return_ids = {
+                        part.tool_call_id
+                        for part in message.parts
+                        if isinstance(part, ToolReturnPart)
+                    }
+
+                    # Only include if all tool return IDs have corresponding tool calls
+                    if tool_return_ids.issubset(tool_call_ids):
+                        validated_messages.append(message)
+                    else:
+                        print(
+                            f"Skipping message with orphaned tool returns: {tool_return_ids - tool_call_ids}"
+                        )
+                        continue
+                else:
+                    # Regular user message or message without tool returns
+                    validated_messages.append(message)
+
+            elif isinstance(message, ModelResponse):
+                # Check for tool calls and track their IDs
+                has_tool_calls = any(
+                    isinstance(part, ToolCallPart) for part in message.parts
+                )
+
+                if has_tool_calls:
+                    # Track tool call IDs for validation of subsequent tool returns
+                    for part in message.parts:
+                        if isinstance(part, ToolCallPart):
+                            tool_call_ids.add(part.tool_call_id)
+
+                validated_messages.append(message)
+            else:
+                # Other message types
+                validated_messages.append(message)
+
+        return validated_messages
