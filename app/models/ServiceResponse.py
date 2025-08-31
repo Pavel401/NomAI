@@ -34,25 +34,20 @@ class NutritionServiceResponse(BaseModel):
         """Convert response to dictionary format for JSON serialization"""
         result = self.dict()
 
-        # Convert NutritionResponseModel to dict and handle enum values
         if self.response:
             response_dict = self.response.dict()
 
-            # Convert portion enum to string value
             if "portion" in response_dict:
                 if hasattr(response_dict["portion"], "value"):
                     response_dict["portion"] = response_dict["portion"].value
                 elif isinstance(response_dict["portion"], str):
-                    # Already converted
                     pass
 
-            # Handle enums in ingredients
             for ingredient in response_dict.get("ingredients", []):
                 if "portion" in ingredient:
                     if hasattr(ingredient["portion"], "value"):
                         ingredient["portion"] = ingredient["portion"].value
 
-            # Handle enums in alternatives
             for alternative in response_dict.get("suggestAlternatives", []):
                 if "portion" in alternative:
                     if hasattr(alternative["portion"], "value"):

@@ -45,7 +45,6 @@ class ErrorHandler:
             metadata.user_agent = request.headers.get("user-agent")
             metadata.ip_address = request.client.host if request.client else None
 
-        # Include stack trace only in development mode
         if include_stack_trace:
             try:
                 is_dev = get_env_variable("PROD").lower() != "true"
@@ -181,7 +180,6 @@ class ErrorHandler:
 
         validation_errors = []
 
-        # Handle Pydantic ValidationError
         if hasattr(exception, "errors"):
             for error in exception.errors():
                 field_path = ".".join(str(loc) for loc in error.get("loc", []))
@@ -194,7 +192,6 @@ class ErrorHandler:
                     )
                 )
         else:
-            # Generic validation error
             validation_errors.append(
                 ErrorDetail(constraint="validation_failed", suggestion=str(exception))
             )
@@ -234,7 +231,6 @@ class ErrorHandler:
     def get_help_url(error_code: ErrorCode) -> Optional[str]:
         """Get help URL for specific error codes"""
 
-        # In a real application, these would be actual documentation URLs
         help_urls = {
             ErrorCode.INVALID_IMAGE_FORMAT: "/docs/errors#invalid-image-format",
             ErrorCode.IMAGE_TOO_LARGE: "/docs/errors#image-too-large",
@@ -246,7 +242,6 @@ class ErrorHandler:
         return help_urls.get(error_code)
 
 
-# Utility functions for common error scenarios
 def create_image_validation_error(
     message: str, field: str = "imageData"
 ) -> ValidationErrorResponse:

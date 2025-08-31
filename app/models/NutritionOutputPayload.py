@@ -9,11 +9,7 @@ from typing_extensions import (
 class Portion(enum.Enum):
     CUP = "cup"
     GRAM = "gram"
-    # TABLESPOON = "tablespoon"
-    # TEASPOON = "teaspoon"
     SLICES = "slices"
-    # PIECE = "piece"
-    # OUNCE = "ounce"
 
 
 class Status(enum.Enum):
@@ -59,10 +55,6 @@ class NutritionInfo(BaseModel):
     fat: int = Field(
         ...,
     )
-    # sugar: Optional[int] = Field(None, )
-    # sodium: Optional[int] = Field(None, )
-    # vitamins: Optional[Dict[str, float]] = None
-    # minerals: Optional[Dict[str, float]] = None
     healthScore: int = Field(
         ...,
     )

@@ -32,7 +32,6 @@ Don't provide medical advice or diagnoses. Always encourage users to consult wit
 
     def _get_openai_key(self) -> Optional[str]:
         """Get OpenAI API key from environment variables."""
-        # Try both possible environment variable names
         api_key = get_env_variable_safe("OPENAI_API_KEY", "")
 
         return api_key if api_key else None

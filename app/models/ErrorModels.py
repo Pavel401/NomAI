@@ -7,31 +7,26 @@ from datetime import datetime
 class ErrorCode(str, Enum):
     """Enumeration of standard error codes"""
 
-    # Validation Errors (4xx)
     INVALID_INPUT = "INVALID_INPUT"
     MISSING_REQUIRED_FIELD = "MISSING_REQUIRED_FIELD"
     INVALID_IMAGE_FORMAT = "INVALID_IMAGE_FORMAT"
     IMAGE_TOO_LARGE = "IMAGE_TOO_LARGE"
     INVALID_BASE64 = "INVALID_BASE64"
 
-    # Business Logic Errors (4xx)
     NO_FOOD_DETECTED = "NO_FOOD_DETECTED"
     ANALYSIS_CONFIDENCE_TOO_LOW = "ANALYSIS_CONFIDENCE_TOO_LOW"
     UNSUPPORTED_FOOD_TYPE = "UNSUPPORTED_FOOD_TYPE"
 
-    # External Service Errors (5xx)
     GEMINI_API_ERROR = "GEMINI_API_ERROR"
     API_RATE_LIMIT_EXCEEDED = "API_RATE_LIMIT_EXCEEDED"
     EXTERNAL_SERVICE_TIMEOUT = "EXTERNAL_SERVICE_TIMEOUT"
     API_KEY_INVALID = "API_KEY_INVALID"
 
-    # System Errors (5xx)
     INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR"
     DATABASE_ERROR = "DATABASE_ERROR"
     CONFIGURATION_ERROR = "CONFIGURATION_ERROR"
     MEMORY_ERROR = "MEMORY_ERROR"
 
-    # Environment/Infrastructure Errors (5xx)
     ENV_VARIABLE_MISSING = "ENV_VARIABLE_MISSING"
     SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
 
@@ -111,7 +106,6 @@ class StandardErrorResponse(BaseModel):
         """Convert error response to dictionary format"""
         result = self.dict(exclude_none=True)
 
-        # Convert datetime to ISO format string for JSON serialization
         if "metadata" in result and result["metadata"]:
             metadata = result["metadata"]
             if "timestamp" in metadata and metadata["timestamp"]:
@@ -165,7 +159,6 @@ class ValidationErrorResponse(BaseModel):
         """Convert validation error response to dictionary format"""
         result = self.dict(exclude_none=True)
 
-        # Convert datetime to ISO format string for JSON serialization
         if "metadata" in result and result["metadata"]:
             metadata = result["metadata"]
             if "timestamp" in metadata and metadata["timestamp"]:
@@ -192,7 +185,6 @@ class BusinessLogicErrorResponse(BaseModel):
         """Convert business logic error response to dictionary format"""
         result = self.dict(exclude_none=True)
 
-        # Convert datetime to ISO format string for JSON serialization
         if "metadata" in result and result["metadata"]:
             metadata = result["metadata"]
             if "timestamp" in metadata and metadata["timestamp"]:
@@ -202,36 +194,27 @@ class BusinessLogicErrorResponse(BaseModel):
         return result
 
 
-# Error code to HTTP status code mapping
 ERROR_CODE_STATUS_MAP = {
-    # 400 Bad Request
     ErrorCode.INVALID_INPUT: 400,
     ErrorCode.MISSING_REQUIRED_FIELD: 400,
     ErrorCode.INVALID_IMAGE_FORMAT: 400,
     ErrorCode.INVALID_BASE64: 400,
     ErrorCode.NO_FOOD_DETECTED: 400,
     ErrorCode.UNSUPPORTED_FOOD_TYPE: 400,
-    # 413 Payload Too Large
     ErrorCode.IMAGE_TOO_LARGE: 413,
-    # 422 Unprocessable Entity
     ErrorCode.ANALYSIS_CONFIDENCE_TOO_LOW: 422,
-    # 429 Too Many Requests
     ErrorCode.API_RATE_LIMIT_EXCEEDED: 429,
-    # 500 Internal Server Error
     ErrorCode.INTERNAL_SERVER_ERROR: 500,
     ErrorCode.MEMORY_ERROR: 500,
     ErrorCode.DATABASE_ERROR: 500,
-    # 502 Bad Gateway
     ErrorCode.GEMINI_API_ERROR: 502,
     ErrorCode.EXTERNAL_SERVICE_TIMEOUT: 502,
-    # 503 Service Unavailable
     ErrorCode.SERVICE_UNAVAILABLE: 503,
     ErrorCode.CONFIGURATION_ERROR: 503,
     ErrorCode.ENV_VARIABLE_MISSING: 503,
     ErrorCode.API_KEY_INVALID: 503,
 }
 
-# Error code to severity mapping
 ERROR_CODE_SEVERITY_MAP = {
     ErrorCode.INVALID_INPUT: ErrorSeverity.LOW,
     ErrorCode.MISSING_REQUIRED_FIELD: ErrorSeverity.LOW,

@@ -24,7 +24,6 @@ def create_agent_tools(agent: Agent):
             allergies: List of known allergies (e.g., ["nuts", "dairy"])
             health_goals: List of health goals (e.g., ["weight_loss", "muscle_gain"])
         """
-        # Create NutritionInputPayload from individual parameters
         nutrition_data = NutritionInputPayload(
             food_description=food_description,
             dietaryPreferences=dietary_preferences or [],

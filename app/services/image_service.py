@@ -15,7 +15,6 @@ class ImageService:
     Service class for handling image-related operations with proper error handling.
     """
 
-    # Configuration constants
     MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
     SUPPORTED_FORMATS = ["jpeg", "jpg", "png", "webp"]
 
@@ -40,7 +39,6 @@ class ImageService:
             )
 
         try:
-            # Try to decode the base64 string
             decoded = base64.b64decode(base64_string, validate=True)
             if len(decoded) == 0:
                 raise ValidationException(
@@ -89,7 +87,6 @@ class ImageService:
         Returns:
             str: Detected image format or None if unknown
         """
-        # Check common image format headers
         if image_bytes.startswith(b"\xff\xd8\xff"):
             return "jpeg"
         elif image_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
@@ -146,26 +143,20 @@ class ImageService:
             ValidationException: If base64 validation fails
             ImageProcessingException: If image validation fails
         """
-        # Validate base64 string
         ImageService.validate_base64_string(base64Image)
 
         try:
-            # Decode the base64 image
             image_bytes = base64.b64decode(base64Image)
 
-            # Validate image size
             ImageService.validate_image_size(image_bytes)
 
-            # Validate image format
             detected_format = ImageService.validate_image_format(image_bytes)
 
             return image_bytes
 
         except (ValidationException, ImageProcessingException):
-            # Re-raise our custom exceptions
             raise
         except Exception as e:
-            # Handle any other unexpected errors
             raise ImageProcessingException(
                 message=f"Failed to process image: {str(e)}",
                 error_code=ErrorCode.INVALID_IMAGE_FORMAT,

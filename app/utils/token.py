@@ -30,15 +30,12 @@ def calculate_cost(
                 },
             )
 
-        # Convert to float if necessary
         input_tokens = float(input_tokens)
         output_tokens = float(output_tokens)
 
-        # Pricing constants (as of current Gemini pricing)
         input_cost_per_million = 0.075  # USD per 1M tokens
         output_cost_per_million = 0.30  # USD per 1M tokens
 
-        # Calculate costs
         input_cost = (input_tokens / 1_000_000) * input_cost_per_million
         output_cost = (output_tokens / 1_000_000) * output_cost_per_million
 

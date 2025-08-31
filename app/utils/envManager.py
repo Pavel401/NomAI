@@ -18,10 +18,8 @@ def get_env_variable(key: str, default: Optional[str] = None) -> str:
     Raises:
         ConfigurationException: If the key is not found and no default is provided
     """
-    # Load environment variables from .env file
     load_dotenv()
 
-    # Get the value of the specified key
     value = os.getenv(key, default)
 
     if value is None:

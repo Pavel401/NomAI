@@ -43,7 +43,6 @@ class Database:
         localtime: optional datetime (client's local time or None)
         """
         try:
-            # Parse messages from bytes
             message_list = ModelMessagesTypeAdapter.validate_json(messages)
 
             json_str = ModelMessagesTypeAdapter.dump_json(message_list)
@@ -80,14 +79,12 @@ class Database:
         for i, msg in enumerate(messages):
             if hasattr(msg, "parts"):
                 for part in msg.parts:
-                    # Track tool calls
                     if (
                         hasattr(part, "tool_call_id")
                         and hasattr(part, "tool_name")
                         and not hasattr(part, "content")
                     ):
                         tool_call_map[part.tool_call_id] = i
-                    # Track tool returns
                     elif hasattr(part, "tool_call_id") and hasattr(part, "content"):
                         tool_return_map[part.tool_call_id] = i
 
@@ -108,11 +105,9 @@ class Database:
                 has_valid_content = False
 
                 for part in msg.parts:
-                    # Keep non-tool parts
                     if not hasattr(part, "tool_call_id"):
                         valid_parts.append(part)
                         has_valid_content = True
-                    # Keep tool calls that have responses
                     elif hasattr(part, "tool_name") and not hasattr(part, "content"):
                         if part.tool_call_id in valid_tool_calls:
                             valid_parts.append(part)
@@ -121,7 +116,6 @@ class Database:
                             print(
                                 f"Removing tool call without response: {part.tool_call_id}"
                             )
-                    # Keep tool returns that have calls
                     elif hasattr(part, "tool_call_id") and hasattr(part, "content"):
                         if part.tool_call_id in valid_tool_calls:
                             valid_parts.append(part)
@@ -135,7 +129,6 @@ class Database:
                     msg.parts = valid_parts
                     cleaned_messages.append(msg)
             else:
-                # Keep messages without parts
                 cleaned_messages.append(msg)
 
         final_messages = []
@@ -161,7 +154,6 @@ class Database:
                     final_messages.append(msg)
 
                 elif msg_tool_returns:
-                    # Only keep tool returns if their calls are pending
                     if msg_tool_returns.issubset(pending_tool_calls):
                         pending_tool_calls -= msg_tool_returns
                         final_messages.append(msg)
@@ -170,7 +162,6 @@ class Database:
                             f"Skipping tool return message with unmatched calls: {msg_tool_returns - pending_tool_calls}"
                         )
                 else:
-                    # Regular message
                     final_messages.append(msg)
             else:
                 final_messages.append(msg)

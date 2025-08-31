@@ -44,7 +44,6 @@ def create_error_metadata(
     """Create error metadata for tracking and debugging."""
     execution_time = (datetime.utcnow() - start_time).total_seconds()
 
-    # Only include stack trace in development
     is_dev = get_env_variable_safe("PROD", "false").lower() != "true"
 
     return ErrorMetadata(
@@ -67,15 +66,12 @@ async def nomai_exception_handler(
     request_id = str(uuid.uuid4())
     start_time = getattr(request.state, "start_time", datetime.utcnow())
 
-    # Get HTTP status code from error code mapping
     status_code = ERROR_CODE_STATUS_MAP.get(exc.error_code, 500)
 
-    # Get severity from error code mapping or use the exception's severity
     severity = exc.severity or ERROR_CODE_SEVERITY_MAP.get(
         exc.error_code, ErrorSeverity.MEDIUM
     )
 
-    # Create error metadata
     metadata = create_error_metadata(
         request=request,
         start_time=start_time,
@@ -84,7 +80,6 @@ async def nomai_exception_handler(
         additional_context=exc.context,
     )
 
-    # Log the error with appropriate level based on severity
     log_data = {
         "error_code": exc.error_code.value,
         "message": exc.message,
@@ -101,7 +96,6 @@ async def nomai_exception_handler(
     else:
         logfire.info("NomAI Exception", **log_data)
 
-    # Create standardized error response
     if isinstance(exc, ValidationException):
         error_response = ValidationErrorResponse(
             error_code=exc.error_code,
@@ -119,7 +113,6 @@ async def nomai_exception_handler(
             metadata=metadata,
         )
     else:
-        # Standard error response for other exceptions
         retry_after = None
         if isinstance(exc, RateLimitException):
             retry_after = exc.context.get("retry_after")
@@ -148,7 +141,6 @@ async def validation_exception_handler(
     request_id = str(uuid.uuid4())
     start_time = getattr(request.state, "start_time", datetime.utcnow())
 
-    # Convert validation errors to our format
     validation_errors = []
     for error in exc.errors():
         field_path = " -> ".join(str(loc) for loc in error["loc"])
@@ -194,7 +186,6 @@ async def http_exception_handler(
     request_id = str(uuid.uuid4())
     start_time = getattr(request.state, "start_time", datetime.utcnow())
 
-    # Map HTTP status codes to our error codes
     status_to_error_code = {
         400: ErrorCode.INVALID_INPUT,
         401: ErrorCode.API_KEY_INVALID,
@@ -264,7 +255,6 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
         stack_trace=traceback.format_exc(),
     )
 
-    # Don't expose internal error details in production
     is_dev = get_env_variable_safe("PROD", "false").lower() != "true"
     message = str(exc) if is_dev else "An unexpected error occurred"
 
@@ -286,18 +276,14 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 def setup_exception_handlers(app: FastAPI) -> FastAPI:
     """Set up global exception handlers for the FastAPI application."""
 
-    # Custom NomAI exceptions
     app.add_exception_handler(BaseNomAIException, nomai_exception_handler)
 
-    # FastAPI validation errors
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(ValidationError, validation_exception_handler)
 
-    # HTTP exceptions
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 
-    # Catch-all for unexpected exceptions
     app.add_exception_handler(Exception, general_exception_handler)
 
     logfire.info("Exception handlers configured successfully")

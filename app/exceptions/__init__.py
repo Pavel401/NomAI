@@ -190,7 +190,6 @@ class BusinessLogicException(BaseNomAIException):
         )
 
 
-# Convenience functions for common exceptions
 def invalid_image_format(
     message: str = "Invalid image format", image_format: Optional[str] = None
 ) -> ImageProcessingException:

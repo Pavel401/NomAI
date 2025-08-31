@@ -35,7 +35,6 @@ from pydantic import BaseModel
 
 router = fastapi.APIRouter()
 
-# Initialize agent lazily to avoid import-time issues
 _agent = None
 
 
@@ -47,14 +46,12 @@ def get_agent():
     return _agent
 
 
-# Get the static files directory
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
 
 def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
     """Convert a model message to a chat message format."""
     if isinstance(m, ModelRequest):
-        # Look for UserPromptPart in the message parts (skip SystemPromptPart)
         user_prompt_part_found = any(
             isinstance(part, UserPromptPart) for part in m.parts
         )
@@ -74,8 +71,6 @@ def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
             return None  # Should not be reached if user_prompt_part_found is true
 
         if tool_return_parts:
-            # This is a request that contains tool returns. We can represent this
-            # as a special kind of model message for the frontend to display.
             message = {
                 "role": "model",
                 "timestamp": tool_return_parts[0].timestamp.isoformat(),
@@ -92,11 +87,9 @@ def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
                 )
             return message
 
-        # If no UserPromptPart or ToolReturnPart found, skip this message
         return None
 
     elif isinstance(m, ModelResponse):
-        # Handle different types of parts in the response
         content_parts = []
         tool_calls = []
         tool_returns = []
@@ -113,10 +106,8 @@ def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
                     }
                 )
             elif isinstance(part, ToolReturnPart):
-                # Get tool name from the content if available
                 tool_name = part.tool_name if hasattr(part, "tool_name") else None
                 if not tool_name and hasattr(part, "content"):
-                    # Try to extract tool name from context or use generic name
                     tool_name = (
                         "calculate_nutrition_by_food_description"  # Our main tool
                     )
@@ -133,17 +124,14 @@ def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
                     }
                 )
 
-        # Combine all text content
         content = "".join(content_parts)
 
-        # Create the message with tool information
         message = {
             "role": "model",
             "timestamp": m.timestamp.isoformat(),
             "content": content,
         }
 
-        # Add tool information if present
         if tool_calls:
             message["tool_calls"] = tool_calls
         if tool_returns:
@@ -163,14 +151,12 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from pathlib import Path
 import json
 
-# ... (keep all the existing imports)
 
 from app.services.chat_database import Database
 from app.services.agent_service import AgentService
 
 router = fastapi.APIRouter()
 
-# ... (keep existing helper functions like get_agent, to_chat_message)
 
 
 async def get_chat_db():
@@ -188,7 +174,6 @@ async def get_chat_messages(
         database = await get_chat_db()
         msgs = await database.get_messages(user_id)
         chat_messages = [to_chat_message(m) for m in msgs]
-        # Filter out None values (system-only messages)
         filtered_messages = [msg for msg in chat_messages if msg is not None]
 
         return Response(
@@ -214,7 +199,6 @@ async def post_chat_message(
 
     async def stream_messages():
         """Streams new line delimited JSON `Message`s to the client using node-by-node iteration."""
-        # Connect to database and get chat history
         database = await get_chat_db()
         messages = await database.get_messages(user_id)
         agent = get_agent()
@@ -224,7 +208,6 @@ async def post_chat_message(
         tool_returns = []
         base_timestamp = None
 
-        # Use client local_time if provided, else server time
         if local_time:
             try:
                 base_timestamp = datetime.fromisoformat(local_time)
@@ -235,11 +218,9 @@ async def post_chat_message(
         else:
             base_timestamp = datetime.now(timezone.utc)
 
-        # Begin node-by-node streaming iteration
         async with agent.iter(prompt, message_history=messages) as run:
             async for node in run:
                 if Agent.is_user_prompt_node(node):
-                    # User prompt node - send user message
                     user_message = {
                         "role": "user",
                         "timestamp": base_timestamp.isoformat(),
@@ -248,7 +229,6 @@ async def post_chat_message(
                     yield json.dumps(user_message).encode("utf-8") + b"\n"
 
                 elif Agent.is_model_request_node(node):
-                    # Model request node - stream partial tokens
                     if base_timestamp is None:
                         base_timestamp = datetime.now(timezone.utc)
 
@@ -256,7 +236,6 @@ async def post_chat_message(
                         async for event in request_stream:
                             if isinstance(event, PartDeltaEvent):
                                 if isinstance(event.delta, TextPartDelta):
-                                    # Stream text delta
                                     accumulated_text += event.delta.content_delta
                                     partial_message = {
                                         "role": "model",
@@ -269,7 +248,6 @@ async def post_chat_message(
                                     ) + b"\n"
 
                             elif isinstance(event, FinalResultEvent):
-                                # Final result event - model has finished
                                 if accumulated_text and not event.tool_name:
                                     final_message = {
                                         "role": "model",
@@ -286,11 +264,9 @@ async def post_chat_message(
                                     ) + b"\n"
 
                 elif Agent.is_call_tools_node(node):
-                    # Call tools node - handle tool calls and results
                     async with node.stream(run.ctx) as handle_stream:
                         async for event in handle_stream:
                             if isinstance(event, FunctionToolCallEvent):
-                                # Tool call event
                                 tool_call = {
                                     "tool_name": event.part.tool_name,
                                     "args": event.part.args,
@@ -298,7 +274,6 @@ async def post_chat_message(
                                 }
                                 tool_calls.append(tool_call)
 
-                                # Send tool call message
                                 tool_call_message = {
                                     "role": "model",
                                     "timestamp": base_timestamp.isoformat(),
@@ -311,7 +286,6 @@ async def post_chat_message(
                                 ) + b"\n"
 
                             elif isinstance(event, FunctionToolResultEvent):
-                                # Tool result event
                                 content = event.result.content
                                 if hasattr(content, "model_dump"):
                                     content = content.model_dump()
@@ -327,7 +301,6 @@ async def post_chat_message(
                                 }
                                 tool_returns.append(tool_return)
 
-                                # Send tool result message
                                 tool_result_message = {
                                     "role": "model",
                                     "timestamp": base_timestamp.isoformat(),
@@ -340,7 +313,6 @@ async def post_chat_message(
                                 ) + b"\n"
 
                 elif Agent.is_end_node(node):
-                    # End node - agent run is complete
                     if run.result and run.result.output:
                         final_message = {
                             "role": "model",
@@ -375,10 +347,8 @@ async def get_message_tools(
             status_code=404,
         )
 
-    # Extract tool information from the message data
     tool_info = {"tool_calls": [], "tool_returns": []}
 
-    # Parse the message and extract tool info
     if "tool_calls" in message_data:
         tool_info["tool_calls"] = message_data["tool_calls"]
     if "tool_returns" in message_data:

@@ -31,7 +31,6 @@ def generate_nutrition_info(query: NutritionInputPayload, request: Request):
     start_time = time.time()
 
     try:
-        # Validate required fields
         if not query.imageUrl:
             raise ValidationException(
                 message="Image imageUrl is required",
@@ -90,7 +89,6 @@ def generate_nutrition_info_from_description(
     start_time = time.time()
 
     try:
-        # Validate required fields
         if not query.food_description:
             raise ValidationException(
                 message="Food description is required",
@@ -100,14 +98,11 @@ def generate_nutrition_info_from_description(
                 suggestion="Please provide a valid description of the food items",
             )
 
-        # Call the nutrition service (which handles its own errors internally)
         response = NutritionService.log_food_nutrition_data_using_description(query)
 
-        # Return the response (could be success or error)
         return JSONResponse(content=response.to_dict(), status_code=response.status)
 
     except BaseNomAIException as e:
-        # Handle our custom exceptions using the error handler
         execution_time = time.time() - start_time
         error_response = ErrorHandler.handle_custom_exception(
             exception=e, request=request, execution_time=execution_time
@@ -118,7 +113,6 @@ def generate_nutrition_info_from_description(
         )
 
     except Exception as e:
-        # Handle any other unexpected exceptions
         execution_time = time.time() - start_time
         error_response = ErrorHandler.handle_unexpected_exception(
             exception=e,
