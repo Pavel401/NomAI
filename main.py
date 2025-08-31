@@ -13,7 +13,6 @@ from app.utils.envManager import get_env_variable, get_env_variable_safe
 from app.middleware.exception_handlers import setup_exception_handlers
 import logfire
 
-# Configure logfire for chat functionality
 logfire.configure(
     send_to_logfire="if-token-present",
     token=os.getenv("LOGFIRE_TOKEN", "default_token"),
@@ -23,15 +22,11 @@ logfire.configure(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for FastAPI app."""
-    # No need to initialize database connection here since we're using Supabase
-    # Each request will create its own connection
     yield
 
 
-# Safely get environment variables
 isProd = get_env_variable_safe("PROD", "false").lower() == "true"
 
-# Create FastAPI app
 app = FastAPI(
     title="NomAI Nutrition API",
     description="AI-powered nutrition analysis API with chat functionality",
@@ -40,10 +35,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Setup global exception handlers
 app = setup_exception_handlers(app)
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,7 +45,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
 app.include_router(nutrition.router, prefix="/nutrition")
 app.include_router(agent.router, prefix="/chat")
 

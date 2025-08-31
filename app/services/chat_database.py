@@ -6,14 +6,7 @@ from typing import List, Dict, Any, Optional
 
 from supabase import create_client, Client
 from datetime import datetime, timezone
-from pydantic_ai.messages import (
-    ModelMessage,
-    ModelMessagesTypeAdapter,
-    ModelRequest,
-    ModelResponse,
-    ToolCallPart,
-    ToolReturnPart,
-)
+from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 import logfire
 
 
@@ -50,14 +43,14 @@ class Database:
         localtime: optional datetime (client's local time or None)
         """
         try:
-            # Parse the messages from bytes (Pydantic)
+            # Parse messages from bytes
             message_list = ModelMessagesTypeAdapter.validate_json(messages)
-            # Convert to JSON-serializable format
+
             json_str = ModelMessagesTypeAdapter.dump_json(message_list)
             messages_dict = json.loads(json_str)
 
             base_time = localtime or datetime.now(timezone.utc)
-            # For each message, store with metadata
+
             messages_to_insert = []
             for msg in messages_dict:
                 messages_to_insert.append(
@@ -75,7 +68,115 @@ class Database:
             return result
         except Exception as e:
             print(f"Error in add_messages: {e}")
-            # Don't let database errors crash the streaming response
+
+    def _clean_messages(self, messages: List[ModelMessage]) -> List[ModelMessage]:
+        """Clean up messages to remove orphaned tool calls and tool returns."""
+        if not messages:
+            return messages
+
+        tool_call_map = {}
+        tool_return_map = {}
+
+        for i, msg in enumerate(messages):
+            if hasattr(msg, "parts"):
+                for part in msg.parts:
+                    # Track tool calls
+                    if (
+                        hasattr(part, "tool_call_id")
+                        and hasattr(part, "tool_name")
+                        and not hasattr(part, "content")
+                    ):
+                        tool_call_map[part.tool_call_id] = i
+                    # Track tool returns
+                    elif hasattr(part, "tool_call_id") and hasattr(part, "content"):
+                        tool_return_map[part.tool_call_id] = i
+
+        valid_tool_calls = set()
+        for tool_call_id in tool_call_map:
+            if (
+                tool_call_id in tool_return_map
+                and tool_call_map[tool_call_id] < tool_return_map[tool_call_id]
+            ):
+                valid_tool_calls.add(tool_call_id)
+            else:
+                print(f"Removing unpaired tool call with ID: {tool_call_id}")
+
+        cleaned_messages = []
+        for i, msg in enumerate(messages):
+            if hasattr(msg, "parts") and msg.parts:
+                valid_parts = []
+                has_valid_content = False
+
+                for part in msg.parts:
+                    # Keep non-tool parts
+                    if not hasattr(part, "tool_call_id"):
+                        valid_parts.append(part)
+                        has_valid_content = True
+                    # Keep tool calls that have responses
+                    elif hasattr(part, "tool_name") and not hasattr(part, "content"):
+                        if part.tool_call_id in valid_tool_calls:
+                            valid_parts.append(part)
+                            has_valid_content = True
+                        else:
+                            print(
+                                f"Removing tool call without response: {part.tool_call_id}"
+                            )
+                    # Keep tool returns that have calls
+                    elif hasattr(part, "tool_call_id") and hasattr(part, "content"):
+                        if part.tool_call_id in valid_tool_calls:
+                            valid_parts.append(part)
+                            has_valid_content = True
+                        else:
+                            print(
+                                f"Removing tool return without call: {part.tool_call_id}"
+                            )
+
+                if valid_parts and has_valid_content:
+                    msg.parts = valid_parts
+                    cleaned_messages.append(msg)
+            else:
+                # Keep messages without parts
+                cleaned_messages.append(msg)
+
+        final_messages = []
+        pending_tool_calls = set()
+
+        for msg in cleaned_messages:
+            if hasattr(msg, "parts"):
+                msg_tool_calls = set()
+                msg_tool_returns = set()
+
+                for part in msg.parts:
+                    if (
+                        hasattr(part, "tool_call_id")
+                        and hasattr(part, "tool_name")
+                        and not hasattr(part, "content")
+                    ):
+                        msg_tool_calls.add(part.tool_call_id)
+                    elif hasattr(part, "tool_call_id") and hasattr(part, "content"):
+                        msg_tool_returns.add(part.tool_call_id)
+
+                if msg_tool_calls:
+                    pending_tool_calls.update(msg_tool_calls)
+                    final_messages.append(msg)
+
+                elif msg_tool_returns:
+                    # Only keep tool returns if their calls are pending
+                    if msg_tool_returns.issubset(pending_tool_calls):
+                        pending_tool_calls -= msg_tool_returns
+                        final_messages.append(msg)
+                    else:
+                        print(
+                            f"Skipping tool return message with unmatched calls: {msg_tool_returns - pending_tool_calls}"
+                        )
+                else:
+                    # Regular message
+                    final_messages.append(msg)
+            else:
+                final_messages.append(msg)
+
+        print(f"Cleaned messages: {len(messages)} -> {len(final_messages)}")
+        return final_messages
 
     async def get_messages(self, user_id: str) -> List[ModelMessage]:
         """Get all messages for a user from Supabase"""
@@ -103,12 +204,11 @@ class Database:
                     print(f"Error parsing message: {e}")
                     continue
 
-            # Fix tool call/tool return message pairs
-            validated_messages = self._validate_tool_message_pairs(messages)
+            cleaned_messages = self._clean_messages(messages)
             print(
-                f"Retrieved {len(messages)} messages, validated to {len(validated_messages)} messages for user {user_id}"
+                f"Retrieved {len(cleaned_messages)} messages, validated to {len(cleaned_messages)} messages for user {user_id}"
             )
-            return validated_messages
+            return cleaned_messages
         except Exception as e:
             print(f"Error getting messages: {e}")
             raise
@@ -138,59 +238,3 @@ class Database:
         except Exception as e:
             print(f"Error getting message by ID: {e}")
             return None
-
-    def _validate_tool_message_pairs(
-        self, messages: List[ModelMessage]
-    ) -> List[ModelMessage]:
-        """
-        Validate and fix tool call/tool return message pairs to ensure OpenAI compatibility.
-        OpenAI requires that messages with role 'tool' must be preceded by messages with 'tool_calls'.
-        """
-        validated_messages = []
-        tool_call_ids = set()
-
-        for i, message in enumerate(messages):
-            if isinstance(message, ModelRequest):
-                # Check for tool return parts without corresponding tool calls
-                has_tool_returns = any(
-                    isinstance(part, ToolReturnPart) for part in message.parts
-                )
-
-                if has_tool_returns:
-                    # Check if there's a corresponding tool call in the previous messages
-                    tool_return_ids = {
-                        part.tool_call_id
-                        for part in message.parts
-                        if isinstance(part, ToolReturnPart)
-                    }
-
-                    # Only include if all tool return IDs have corresponding tool calls
-                    if tool_return_ids.issubset(tool_call_ids):
-                        validated_messages.append(message)
-                    else:
-                        print(
-                            f"Skipping message with orphaned tool returns: {tool_return_ids - tool_call_ids}"
-                        )
-                        continue
-                else:
-                    # Regular user message or message without tool returns
-                    validated_messages.append(message)
-
-            elif isinstance(message, ModelResponse):
-                # Check for tool calls and track their IDs
-                has_tool_calls = any(
-                    isinstance(part, ToolCallPart) for part in message.parts
-                )
-
-                if has_tool_calls:
-                    # Track tool call IDs for validation of subsequent tool returns
-                    for part in message.parts:
-                        if isinstance(part, ToolCallPart):
-                            tool_call_ids.add(part.tool_call_id)
-
-                validated_messages.append(message)
-            else:
-                # Other message types
-                validated_messages.append(message)
-
-        return validated_messages

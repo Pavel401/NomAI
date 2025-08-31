@@ -20,7 +20,6 @@ def calculate_cost(
         BusinessLogicException: If token counts are invalid
     """
     try:
-        # Validate inputs
         if input_tokens < 0 or output_tokens < 0:
             raise BusinessLogicException(
                 message="Token counts cannot be negative",
@@ -60,5 +59,3 @@ def calculate_cost(
             message=f"Failed to calculate token cost: {str(e)}",
             error_code=ErrorCode.INTERNAL_SERVER_ERROR,
         ) from e
-
-
