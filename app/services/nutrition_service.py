@@ -5,11 +5,11 @@ import time
 from typing import Optional, List, Dict, Any, Union
 from google import genai
 from dotenv import load_dotenv
-from app.models.NutritionOutputPayload import NutritionResponseModel
+from app.models.nutrition_output_payload import NutritionResponseModel
 from app.services.image_service import ImageService
 from app.services.prompt_service import PromptService
-from app.models.NutritionInputPayload import NutritionInputPayload
-from app.models.ServiceResponse import (
+from app.models.nutrition_input_payload import NutritionInputPayload
+from app.models.service_response import (
     NutritionServiceResponse,
     ErrorResponse,
     ServiceMetadata,
@@ -31,7 +31,7 @@ from app.exceptions import (
     no_food_detected,
     low_confidence_analysis,
 )
-from app.models.ErrorModels import ErrorCode
+from app.models.error_models import ErrorCode
 from google.genai import types
 
 load_dotenv()

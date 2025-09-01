@@ -28,8 +28,8 @@ from pydantic_ai.exceptions import UnexpectedModelBehavior
 from pydantic_ai import Agent
 from pydantic import BaseModel
 
-from app.models.ChatModels import ChatMessage
-from app.models.chatmessagerequest import ChatMessageRequest
+from app.models.chat_models import ChatMessage
+from app.models.chat_message_request import ChatMessageRequest
 from app.services.chat_database import Database
 from app.services.agent_service import AgentService
 

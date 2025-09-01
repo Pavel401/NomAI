@@ -20,7 +20,7 @@ from app.exceptions import (
     RateLimitException,
     BusinessLogicException,
 )
-from app.models.ErrorModels import (
+from app.models.error_models import (
     StandardErrorResponse,
     ValidationErrorResponse,
     BusinessLogicErrorResponse,

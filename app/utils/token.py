@@ -1,6 +1,6 @@
 from typing import Union
 from app.exceptions import BusinessLogicException
-from app.models.ErrorModels import ErrorCode
+from app.models.error_models import ErrorCode
 
 
 def calculate_cost(

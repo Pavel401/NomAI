@@ -1,7 +1,7 @@
 from typing import Optional, Any, Dict, Union
 from pydantic import BaseModel, Field
 
-from app.models.NutritionOutputPayload import NutritionResponseModel
+from app.models.nutrition_output_payload import NutritionResponseModel
 
 
 class ServiceMetadata(BaseModel):

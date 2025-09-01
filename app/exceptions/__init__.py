@@ -1,5 +1,5 @@
 from typing import Optional, Any, Dict, List
-from app.models.ErrorModels import ErrorCode, ErrorDetail, ErrorSeverity
+from app.models.error_models import ErrorCode, ErrorDetail, ErrorSeverity
 
 
 class BaseNomAIException(Exception):

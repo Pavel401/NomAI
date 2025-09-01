@@ -2,12 +2,12 @@ import time
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from app.models.NutritionInputPayload import NutritionInputPayload
+from app.models.nutrition_input_payload import NutritionInputPayload
 from app.services.nutrition_service import NutritionService
-from app.models.ServiceResponse import NutritionServiceResponse, ErrorResponse
+from app.models.service_response import NutritionServiceResponse, ErrorResponse
 from app.exceptions import BaseNomAIException, ValidationException
 from app.utils.error_handler import ErrorHandler
-from app.models.ErrorModels import ErrorCode, ErrorDetail
+from app.models.error_models import ErrorCode, ErrorDetail
 
 router = APIRouter()
 

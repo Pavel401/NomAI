@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, List
 from fastapi import Request
 from datetime import datetime
 
-from app.models.ErrorModels import (
+from app.models.error_models import (
     StandardErrorResponse,
     ValidationErrorResponse,
     BusinessLogicErrorResponse,

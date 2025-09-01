@@ -7,7 +7,7 @@ from app.exceptions import (
     invalid_image_format,
     image_too_large,
 )
-from app.models.ErrorModels import ErrorCode, ErrorDetail
+from app.models.error_models import ErrorCode, ErrorDetail
 
 
 class ImageService:

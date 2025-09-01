@@ -1,6 +1,6 @@
 from pydantic_ai import Agent, RunContext
-from app.models.NutritionInputPayload import NutritionInputPayload
-from app.models.ServiceResponse import NutritionServiceResponse
+from app.models.nutrition_input_payload import NutritionInputPayload
+from app.models.service_response import NutritionServiceResponse
 from app.services.nutrition_service import NutritionService
 
 
