@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from typing import Annotated, Optional
+from typing import Annotated, List, Optional
 
 import fastapi
-from fastapi import Depends, Request, Form
+from fastapi import Depends, Request, Form, Body, Query
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from pathlib import Path
 import json
@@ -26,11 +26,12 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.exceptions import UnexpectedModelBehavior
 from pydantic_ai import Agent
+from pydantic import BaseModel
 
 from app.models.ChatModels import ChatMessage
+from app.models.chatmessagerequest import ChatMessageRequest
 from app.services.chat_database import Database
 from app.services.agent_service import AgentService
-from pydantic import BaseModel
 
 
 router = fastapi.APIRouter()
@@ -38,11 +39,19 @@ router = fastapi.APIRouter()
 _agent = None
 
 
-def get_agent():
+def get_agent(
+    dietaryPreferences: List[str],
+    allergies: List[str],
+    selectedGoals: List[str],
+):
     """Get or create the chat agent."""
     global _agent
     if _agent is None:
-        _agent = AgentService.create_chat_agent()
+        _agent = AgentService.create_chat_agent(
+            dietaryPreferences=dietaryPreferences,
+            allergies=allergies,
+            selectedGoals=selectedGoals,
+        )
     return _agent
 
 
@@ -68,13 +77,13 @@ def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
                         "timestamp": part.timestamp.isoformat(),
                         "content": part.content,
                     }
-            return None  # Should not be reached if user_prompt_part_found is true
+            return None
 
         if tool_return_parts:
             message = {
                 "role": "model",
                 "timestamp": tool_return_parts[0].timestamp.isoformat(),
-                "content": "",  # No direct text content
+                "content": "",
                 "tool_returns": [],
             }
             for part in tool_return_parts:
@@ -142,23 +151,6 @@ def to_chat_message(m: ModelMessage) -> Optional[ChatMessage]:
     raise UnexpectedModelBehavior(f"Unexpected message type for chat app: {m}")
 
 
-from datetime import datetime, timezone
-from typing import Annotated, Optional
-
-import fastapi
-from fastapi import Depends, Request, Form, Query
-from fastapi.responses import FileResponse, Response, StreamingResponse
-from pathlib import Path
-import json
-
-
-from app.services.chat_database import Database
-from app.services.agent_service import AgentService
-
-router = fastapi.APIRouter()
-
-
-
 async def get_chat_db():
     """Dependency to get chat database instance."""
     db = await Database.connect()
@@ -190,18 +182,31 @@ async def get_chat_messages(
 
 
 @router.post("/messages")
-async def post_chat_message(
-    prompt: Annotated[str, Form()],
-    user_id: Annotated[str, Form(..., description="User ID")],
-    local_time: Annotated[Optional[str], Form()] = None,
-) -> StreamingResponse:
+async def post_chat_message(messagePayload: ChatMessageRequest) -> StreamingResponse:
     """Send a chat message and stream the response."""
 
     async def stream_messages():
         """Streams new line delimited JSON `Message`s to the client using node-by-node iteration."""
         database = await get_chat_db()
+
+        prompt = messagePayload.prompt
+        user_id = messagePayload.user_id
+        local_time = messagePayload.local_time
+        dietary_preferences = messagePayload.dietary_preferences
+        allergies = messagePayload.allergies
+        selected_goals = messagePayload.selected_goals
+        foodimage = messagePayload.foodImage
+
+        if foodimage:
+            prompt += f"\n\n[User provided an image: {foodimage}]"
+
         messages = await database.get_messages(user_id)
-        agent = get_agent()
+
+        agent = get_agent(
+            dietaryPreferences=dietary_preferences or [],
+            allergies=allergies or [],
+            selectedGoals=selected_goals or [],
+        )
 
         accumulated_text = ""
         tool_calls = []

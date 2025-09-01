@@ -4,7 +4,7 @@ from app.models.ServiceResponse import NutritionServiceResponse
 from app.services.nutrition_service import NutritionService
 
 
-def create_agent_tools(agent: Agent):
+def create_agent_tools(agent: Agent, user_context=None):
     """Create and register tools with the provided agent."""
 
     @agent.tool
@@ -24,6 +24,14 @@ def create_agent_tools(agent: Agent):
             allergies: List of known allergies (e.g., ["nuts", "dairy"])
             health_goals: List of health goals (e.g., ["weight_loss", "muscle_gain"])
         """
+        # Use user context if available and tool parameters are not provided
+        if user_context:
+            dietary_preferences = (
+                dietary_preferences or user_context.dietary_preferences
+            )
+            allergies = allergies or user_context.allergies
+            health_goals = health_goals or user_context.selected_goals
+
         nutrition_data = NutritionInputPayload(
             food_description=food_description,
             dietaryPreferences=dietary_preferences or [],
