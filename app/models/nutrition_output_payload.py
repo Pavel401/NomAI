@@ -65,6 +65,7 @@ class NutritionResponseModel(BaseModel):
     """Response model for nutrition analysis"""
 
     message: Optional[str] = Field(None, description="Status message or error details")
+    imageUrl: Optional[str] = Field(None, description="URL of the analyzed food image")
     foodName: str = Field(..., description="Name of the analyzed food")
     portion: Portion = Field(..., description="Portion type")
     portionSize: float = Field(..., description="Size of the portion")

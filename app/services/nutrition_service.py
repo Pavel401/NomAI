@@ -94,6 +94,7 @@ class NutritionService:
                     selectedGoal=query.selectedGoals,
                     selectedDiet=query.dietaryPreferences,
                     selectedAllergy=query.allergies,
+                    imageUrl=query.imageUrl,
                 )
             except Exception as e:
                 raise BusinessLogicException(

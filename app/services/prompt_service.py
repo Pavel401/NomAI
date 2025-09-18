@@ -42,6 +42,7 @@ class PromptService:
         selectedGoal: list = None,
         selectedDiet: list = None,
         selectedAllergy: list = None,
+        imageUrl: str = None,
     ) -> str:
         """Generate the complete nutrition analysis prompt."""
         dietary_context = PromptService.get_dietary_context(
@@ -120,6 +121,8 @@ MANDATORY JSON STRUCTURE:
 
 6. confidenceScore: A score from 0-10 indicating the confidence in the analysis (integer)
 
+7. ImageURL should be based on the prompt user provides , if no image is provided return empty string
+
 The final JSON should exactly follow this structure:
 {{
   "status": "SUCCESS",
@@ -127,6 +130,7 @@ The final JSON should exactly follow this structure:
   "foodName": string,
   "portion": string (one of: "cup", "gram", "slices", "piece"),
   "portionSize": number,
+  "imageUrl": string {imageUrl if imageUrl else ""},
   "ingredients": [
     {{
       "name": string,
