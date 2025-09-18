@@ -273,3 +273,20 @@ CRITICAL RULES:
 - Use third person ("This food is..." not "You...")
 - Calculate for EXACT quantity mentioned
         """
+
+
+@staticmethod
+def get_nutrition_analysis_prompt_from_description(
+    user_message: str = None,
+    selectedGoal: list = None,
+    selectedDiet: list = None,
+    selectedAllergy: list = None,
+):
+    """Generate the complete nutrition analysis prompt from a description."""
+    dietary_context = PromptService.get_dietary_context(
+        selectedGoal, selectedDiet, selectedAllergy
+    )
+    user_message_instruction = PromptService.get_user_message_instruction(user_message)
+
+    return f"""
+NUTRITION ANALYSIS TASK"""

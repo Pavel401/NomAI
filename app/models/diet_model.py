@@ -61,6 +61,9 @@ class FoodItem(BaseModel):
     protein: int = Field(..., description="Protein content in grams")
     carbs: int = Field(..., description="Carbohydrate content in grams")
     fiber: int = Field(..., description="Fiber content in grams")
+    typeOfMeal: str = Field(
+        ..., description="Type of meal (breakfast, lunch, dinner, snack)"
+    )
     fat: int = Field(..., description="Fat content in grams")
     portion: Portion = Field(..., description="Portion unit of the food item")
 
@@ -89,4 +92,33 @@ class DailyDietOutput(BaseModel):
 
     cheatMealOfTheDay: FoodItem = Field(
         ..., description="Cheat meal suggestion for the day"
+    )
+
+
+class WeeklyDietOutput(BaseModel):
+    days: List[DailyDietOutput] = Field(
+        default_factory=list, description="List of daily diet outputs for the week"
+    )
+
+
+class SuggestedDifferentMealInput(BaseModel):
+    mealPrompt: str = Field(..., description="Prompt describing the meal")
+    currentMeal: FoodItem = Field(..., description="Current meal details")
+    mealType: str = Field(
+        ..., description="Type of meal (breakfast, lunch, dinner, snack)"
+    )
+    dietaryPreferences: List[str] = Field(
+        default_factory=list, description="User's dietary preferences"
+    )
+    allergies: List[str] = Field(
+        default_factory=list, description="User's food allergies"
+    )
+    dislikedFoods: List[str] = Field(
+        default_factory=list, description="Foods the user dislikes"
+    )
+    anyDiseases: List[str] = Field(
+        default_factory=list, description="Any diseases the user has"
+    )
+    selectedGoals: List[str] = Field(
+        default_factory=list, description="User's health goals"
     )

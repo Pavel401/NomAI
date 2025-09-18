@@ -160,7 +160,6 @@ class NutritionService:
                         error_code=ErrorCode.INTERNAL_SERVER_ERROR,
                     )
 
-
                 print("Parsed response from Gemini:", nutrition_data)
 
             except NutritionAnalysisException:
@@ -294,7 +293,6 @@ class NutritionService:
                         message="No nutrition data received from analysis service",
                         error_code=ErrorCode.INTERNAL_SERVER_ERROR,
                     )
-
 
             except NutritionAnalysisException:
                 raise
