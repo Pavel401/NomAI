@@ -1089,14 +1089,20 @@
           this.setTyping(true);
 
           try {
-            const formData = new FormData();
-            formData.append('prompt', message);
-            formData.append('user_id', userId);
+            const requestBody = {
+              prompt: message,
+              user_id: userId,
+              local_time: new Date().toISOString(),
+              dietary_preferences: [],
+              allergies: [],
+              selected_goals: [],
+            };
 
             const response = await fetch(this.apiEndpoint, {
               method: 'POST',
-              body: formData,
+              body: JSON.stringify(requestBody),
               headers: {
+                'Content-Type': 'application/json',
                 Accept: 'text/plain',
               },
             });

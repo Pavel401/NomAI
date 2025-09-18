@@ -144,10 +144,16 @@ async def validation_exception_handler(
     validation_errors = []
     for error in exc.errors():
         field_path = " -> ".join(str(loc) for loc in error["loc"])
+
+        # Handle bytes input that can't be JSON serialized
+        error_input = error.get("input")
+        if isinstance(error_input, bytes):
+            error_input = f"<bytes data of length {len(error_input)}>"
+
         validation_errors.append(
             ErrorDetail(
                 field=field_path,
-                value=error.get("input"),
+                value=error_input,
                 constraint=error["type"],
                 suggestion=error["msg"],
             )
